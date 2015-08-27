@@ -1,7 +1,8 @@
 import io
 import socket
 import struct
-from PIL import Image
+import cv2
+import numpy as np
 
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
 # all interfaces)
@@ -25,10 +26,9 @@ try:
         # Rewind the stream, open it as an image with PIL and do some
         # processing on it
         image_stream.seek(0)
-        image = Image.open(image_stream)
-        print('Image is %dx%d' % image.size)
-        image.verify()
-        print('Image is verified')
+        data = np.fromstring(image_stream, dtype=np.uint8)
+
+        print('Image is %dx%d' % data.shape)
 finally:
     connection.close()
     server_socket.close()
