@@ -3,6 +3,7 @@ import socket
 import struct
 import numpy as np
 w, h = 640, 480
+w, h = 200, 100
 
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
 # all interfaces)
@@ -27,7 +28,7 @@ try:
         # processing on it
         image_stream.seek(0)
         data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
-        data = data.reshape(w, h, 3)
+        data = data.reshape(h, w, 3)
         print('Image is ', data.shape)
 finally:
     connection.close()
