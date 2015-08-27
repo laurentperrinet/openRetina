@@ -1,8 +1,8 @@
 import io
 import socket
 import struct
-import cv2
 import numpy as np
+w, h = 640, 480
 
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
 # all interfaces)
@@ -26,9 +26,12 @@ try:
         # Rewind the stream, open it as an image with PIL and do some
         # processing on it
         image_stream.seek(0)
-        data = np.fromstring(image_stream, dtype=np.uint8)
-
-        print('Image is %dx%d' % data.shape)
+        data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
+        data = data.reshape(w, h, 3)
+        print('Image is ', data.shape)
 finally:
     connection.close()
     server_socket.close()
+
+import imageio
+imageio.imwrite('capture.png', data)

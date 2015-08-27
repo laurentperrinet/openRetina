@@ -3,7 +3,7 @@ import socket
 import struct
 import time
 import picamera
-
+w, h = 640, 480
 # Connect a client socket to my_server:8000 (change my_server to the
 # hostname of your server)
 client_socket = socket.socket()
@@ -13,7 +13,7 @@ client_socket.connect(('192.168.0.4', 8000))
 connection = client_socket.makefile('wb')
 try:
     with picamera.PiCamera() as camera:
-        camera.resolution = (640, 480)
+        camera.resolution = (w, h)
         # Start a preview and let the camera warm up for 2 seconds
         camera.start_preview()
         time.sleep(2)
