@@ -11,6 +11,31 @@ w, h = 320, 240
 client_socket = socket.socket()
 client_socket.connect(('192.168.0.4', 8000))
 
+def raw_resolution(resolution):
+    """
+    Round a (width, height) tuple up to the nearest multiple of 32 horizontally
+    and 16 vertically (as this is what the Pi's camera module does for
+    unencoded output).
+    """
+    width, height = resolution
+    fwidth = (width + 31) // 32 * 32
+    fheight = (height + 15) // 16 * 16
+    return fwidth, fheight
+
+
+def bytes_to_rgb(data, resolution):
+    """
+    Converts a bytes objects containing RGB/BGR data to a `numpy`_ array.
+    """
+    width, height = resolution
+    fwidth, fheight = raw_resolution(resolution)
+    if len(data) != (fwidth * fheight * 3):
+        raise PiCameraValueError(
+            'Incorrect buffer length for resolution %dx%d' % (width, height))
+    # Crop to the actual resolution
+    return np.frombuffer(data, dtype=np.uint8).\
+            reshape((fheight, fwidth, 3))[:height, :width, :]
+
 # Make a file-like object out of the connection
 connection = client_socket.makefile('wb')
 try:
