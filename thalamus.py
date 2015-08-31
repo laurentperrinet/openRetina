@@ -2,8 +2,8 @@ import io
 import socket
 import struct
 import numpy as np
-w, h = 640, 480
 w, h = 320, 240
+w, h = 640, 480
 
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
 # all interfaces)

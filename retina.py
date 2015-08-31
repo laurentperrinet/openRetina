@@ -66,7 +66,7 @@ try:
         camera.framerate = 30
         time.sleep(2)
         start = time.time()
-        camera.capture_sequence(streams(), 'jpeg', use_video_port=True)
+        camera.capture_sequence(streams(), 'rgb', use_video_port=True)
 
     # Shut down the streamers in an orderly fashion
     while pool:
