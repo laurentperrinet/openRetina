@@ -38,7 +38,7 @@ class openRetina(object):
         self.w = (self.w + 31) // 32 * 32
         self.h = (self.h + 15) // 16 * 16
 
-    def code(self, stream, connection)
+    def code(self, stream, connection):
         
 #                             self.stream.seek(0)
         # Read the image and do some processing on it
