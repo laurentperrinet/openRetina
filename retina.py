@@ -45,7 +45,6 @@ try:
 #                             print(data.min(), data.max())
                             connection.write(struct.pack('<L', self.stream.tell()))
                             connection.flush()
-                            
                             self.stream.seek(0)
                             connection.write(self.stream.read())
                     finally:
@@ -73,7 +72,7 @@ try:
                 count += 1
             else:
                 # When the pool is starved, wait a while for it to refill
-                time.sleep(0.1)
+                time.sleep(ret.refill_time)
             finish = time.time()
 
     with picamera.PiCamera() as camera:
