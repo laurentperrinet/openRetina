@@ -43,9 +43,13 @@ class openRetina(object):
         self.h = (self.h + 15) // 16 * 16
 
     def code(self, stream, connection):
+        # write the length of the stream and send it
         connection.write(struct.pack('<L', stream.tell()))
         connection.flush()
         # Read the image and do some processing on it
+        data = np.fromstring(stream.getvalue(), dtype=np.uint8)
+        # "Decode" the image from the array, preserving colour
+        image = cv2.imdecode(data, 1)
         # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
