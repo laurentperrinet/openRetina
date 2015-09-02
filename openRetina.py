@@ -16,8 +16,8 @@ class openRetina(object):
         self.fps = 90
 
         # simulation time
-        self.sleep_time = 1 # let the camera warm up for like 2 seconds
-        self.T_SIM = 20 # in seconds
+        self.sleep_time = 2 # let the camera warm up for like 2 seconds
+        self.T_SIM = 5 # in seconds
 
         # displaing options (server side)
         self.display = False
