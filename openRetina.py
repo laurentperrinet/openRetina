@@ -26,11 +26,11 @@ class openRetina(object):
         self.refill_time = 0.1 # in seconds
 
         # displaing options (server side)
-        self.display = True
         self.display = False
+        self.display = True
         self.do_fs = True
-        self.capture = False
         self.capture = True
+        self.capture = False
 
     def raw_resolution(self):
         """
@@ -42,19 +42,16 @@ class openRetina(object):
         self.h = (self.h + 15) // 16 * 16
 
     def code(self, stream, connection):
-        
-#                             self.stream.seek(0)
+        connection.write(struct.pack('<L', stream.tell()))
+        connection.flush()
         # Read the image and do some processing on it
         # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
-#                                     
 #                             print(data.min(), data.max())
 #                             data *= -1
 #                             data += 256
 #                             print(data.min(), data.max())
-        connection.write(struct.pack('<L', stream.tell()))
-        connection.flush()
         stream.seek(0)
         connection.write(stream.read())
 

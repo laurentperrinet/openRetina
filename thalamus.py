@@ -130,14 +130,6 @@ try:
                 t0 = time.time()
             except:
                 pass
-#             try:
-#                 data = ret.decode(connection)
-#                 print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
-#                 t0 = time.time()
-#             finally:
-#                 if ret.capture:
-#                     import imageio
-#                     imageio.imwrite('capture.png', data)
         if ret.capture:
             import imageio
             imageio.imwrite('capture.png', data)
