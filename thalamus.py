@@ -39,6 +39,7 @@ if ret.display:
     import pyglet.gl as gl
     from pyglet.gl.glu import gluLookAt
     import numpy as np
+    @win_0.event
     def on_resize(width, height):
         gl.glViewport(0, 0, width, height)
         gl.glEnable(gl.GL_BLEND)
@@ -53,15 +54,12 @@ if ret.display:
         gl.glDisable(gl.GL_CLIP_PLANE1)
         gl.glDisable(gl.GL_CLIP_PLANE2)
         gl.glDisable(gl.GL_CLIP_PLANE3)
+#     print 'The window was resized to %dx%d' % (width, height)
         return pyglet.event.EVENT_HANDLED
 
     win_0.on_resize = on_resize
     win_0.set_visible(True)
 
-# @win_0.event
-# def on_resize(width, height):
-#     print 'The window was resized to %dx%d' % (width, height)
-#
     @win_0.event
     def on_draw():
         global data
@@ -116,45 +114,20 @@ try:
         def callback(dt):
             global data, t0
             try:
-                # Read the length of the image as a 32-bit unsigned int. If the
-                # length is zero, quit the loop
-                image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
-#             if not image_len:
-#                 break
-                # Construct a stream to hold the image data and read the image
-                # data from the connection
-                image_stream = io.BytesIO()
-                image_stream.write(connection.read(image_len))
-                # Rewind the stream, open it as an image with PIL and do some
-                # processing on it
-                image_stream.seek(0)
-                data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
-                data = data.reshape(ret.h, ret.w, 3)
+                data = ret.decode(connection)
                 print('Image is ', data.shape)
                 print 'FPS=', 1./(time.time()-t0)
                 t0 = time.time()
             except:
-                pass
-#                 import sys
-#                 sys.exit()
+#                 data = np.zeros((ret.w, ret.h), dtype=np.uint8)
+#                 pass
+                import sys
+                sys.exit()
         pyglet.clock.schedule(callback)
         pyglet.app.run()
     else:
         while True:
-            # Read the length of the image as a 32-bit unsigned int. If the
-            # length is zero, quit the loop
-            image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
-            if not image_len:
-                break
-            # Construct a stream to hold the image data and read the image
-            # data from the connection
-            image_stream = io.BytesIO()
-            image_stream.write(connection.read(image_len))
-            # Rewind the stream, open it as an image with PIL and do some
-            # processing on it
-            image_stream.seek(0)
-            data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
-            data = data.reshape(ret.h, ret.w, 3)
+            data = ret.decode(connection)
             print('Image is ', data.shape)
         import imageio
         imageio.imwrite('capture.png', data)
