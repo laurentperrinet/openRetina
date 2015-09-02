@@ -6,6 +6,7 @@ Base class for the openRetina
 """
 import io
 import struct
+import array
 import numpy as np
 import cv2
 
@@ -44,20 +45,24 @@ class openRetina(object):
         self.h = (self.h + 15) // 16 * 16
 
     def code(self, stream, connection):
-        # write the length of the stream and send it
-        connection.write(struct.pack('<L', stream.tell()))
-        connection.flush()
         # Read the image and do some processing on it
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         # "Decode" the image from the array, preserving colour
         image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-        # Construct a numpy array from the stream
+        image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
+        r, image = cv2.threshold(image, 127, 255, 1)
+        stream.seek(0)
+        stream.write(array.array('B', image.ravel().tolist()).tostring())
+         # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
 #                             print(data.min(), data.max())
 #                             data *= -1
 #                             data += 256
 #                             print(data.min(), data.max())
+        # write the length of the stream and send it
+        connection.write(struct.pack('<L', stream.tell()))
+        connection.flush()
         stream.seek(0)
         connection.write(stream.read())
 
