@@ -47,19 +47,19 @@ class openRetina(object):
     def code(self, stream, connection):
         # Read the image and do some processing on it
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
-        # "Decode" the image from the array, preserving colour
-        image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-#         image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
-        r, image = cv2.threshold(image, 127, 255, 1)
-        stream.seek(0)
-        stream.write(array.array('B', image.ravel().tolist()).tostring())
+#         # "Decode" the image from the array, preserving colour
+#         image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
+# #         image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
+#         r, image = cv2.threshold(image, 127, 255, 1)
          # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
-#                             print(data.min(), data.max())
-#                             data *= -1
-#                             data += 256
-#                             print(data.min(), data.max())
+        print(data.min(), data.max())
+        data *= -1
+        data += 256
+        print(data.min(), data.max())
+        stream.seek(0)
+        stream.write(array.array('B', image.ravel().tolist()).tostring())
         # write the length of the stream and send it
         connection.write(struct.pack('<L', stream.tell()))
         connection.flush()
