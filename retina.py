@@ -33,7 +33,7 @@ try:
                 if self.event.wait(1):
                     try:
                         with connection_lock:
-                            data = np.frombuffer(data, dtype=np.uint8).reshape((ret.h, ret.w, 3))
+                            data = np.frombuffer(self.stream, dtype=np.uint8).reshape((ret.h, ret.w, 3))
                             data *= -1
                             data += 256
                             connection.write(struct.pack('<L', self.stream.tell()))
