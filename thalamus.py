@@ -108,6 +108,7 @@ if ret.display:
 
 import time
 t0 = time.time()
+start = time.time()
 try:
     if ret.display:
         def callback(dt):
@@ -122,7 +123,7 @@ try:
         pyglet.clock.schedule(callback)
         pyglet.app.run()
     else:
-        while True:
+        while time.time()-start < ret.T_SIM + ret.sleep_time*2:
             try:
                 data = ret.decode(connection)
                 print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
