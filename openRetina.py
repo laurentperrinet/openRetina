@@ -52,7 +52,7 @@ class openRetina(object):
 #                             print(data.min(), data.max())
         connection.write(struct.pack('<L', stream.tell()))
         connection.flush()
-        self.stream.seek(0)
+        stream.seek(0)
         connection.write(stream.read())
 
     def decode(self, connection):
