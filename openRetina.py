@@ -50,8 +50,7 @@ class openRetina(object):
         # Read the image and do some processing on it
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         # "Decode" the image from the array, preserving colour
-        image = cv2.imdecode(data, 1)
-        image = 256 - image
+        image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
         # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
