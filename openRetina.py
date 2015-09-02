@@ -8,14 +8,15 @@ Base class for the openRetina
 class openRetina(object):
     def __init__(self):
         self.ip = '192.168.2.1'
-        self.w, self.h = 320, 240
+        self.w, self.h = 160, 120
+#         self.w, self.h = 320, 240
 #         self.w, self.h = 640, 480
         # adjust resolution on the rpi
         self.raw_resolution()
         self.fps = 90
 
         # simulation time
-        self.T_SIM = 10 # in seconds
+        self.T_SIM = 20 # in seconds
 
         # displaing options (server side)
         self.display = True
