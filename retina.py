@@ -63,7 +63,7 @@ try:
             finish = time.time()
 
     with picamera.PiCamera() as camera:
-        pool = [ImageStreamer() for i in range(4)]
+        pool = [ImageStreamer() for i in range(ret.n_cores)]
         camera.resolution = (ret.w, ret.h)
         camera.framerate = ret.fps
         time.sleep(ret.sleep_time)
