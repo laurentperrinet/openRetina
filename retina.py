@@ -37,7 +37,7 @@ try:
                             self.stream.seek(0)
                             # Read the image and do some processing on it
                             # Construct a numpy array from the stream
-                            data = np.fromfile(self.stream.getvalue(), dtype=np.uint8)
+                            data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
                                     
                             print(data.min(), data.max())
                             data *= -1
