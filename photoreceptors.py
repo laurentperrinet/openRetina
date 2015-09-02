@@ -1,4 +1,4 @@
-import io
+import io, struct
 import socket
 import time
 import picamera
