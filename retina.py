@@ -5,9 +5,22 @@ import time
 import threading
 import picamera
 
+def bytes_to_rgb(ret, data):
+    """
+    Converts a bytes objects containing RGB/BGR data to a `numpy`_ array.
+    """
+    if len(data) != (ret.w * ret.h * 3):
+        raise picamera.PiCameraValueError(
+            'Incorrect buffer length for resolution %dx%d' % (width, height))
+    # Crop to the actual resolution
+    return np.frombuffer(data, dtype=np.uint8).\
+            reshape((ret.h, ret.w, 3))[:height, :width, :]
+
+from openRetina import openRetina
+ret = openRetina()
+
 client_socket = socket.socket()
-# client_socket.connect(('192.168.0.4', 8000))
-client_socket.connect(('192.168.2.1', 8000))
+client_socket.connect((ret.ip, 8000))
 
 connection = client_socket.makefile('wb')
 try:
@@ -64,8 +77,8 @@ try:
 
     with picamera.PiCamera() as camera:
         pool = [ImageStreamer() for i in range(4)]
-        camera.resolution = (640, 480)
-        camera.framerate = 30
+        camera.resolution = (ret.w, ret.h)
+        camera.framerate = ret.fps
         time.sleep(2)
         start = time.time()
         camera.capture_sequence(streams(), 'rgb', use_video_port=True)
