@@ -4,6 +4,7 @@ import struct
 import time
 import threading
 import picamera
+import numpy as np
 
 from openRetina import openRetina
 ret = openRetina()
