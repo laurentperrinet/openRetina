@@ -55,7 +55,7 @@ class openRetina(object):
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
         print('before', data.min(), data.max())
-        data = 256 - data
+        data = 255 - data
         print(data.min(), data.max())
         stream.seek(0)
         stream.write(array.array('B', data.ravel().tolist()).tostring())
