@@ -9,7 +9,7 @@ from openRetina import openRetina
 ret = openRetina()
 
 client_socket = socket.socket()
-print(ret.ip)
+print('This client sends data to IP: ', ret.ip)
 client_socket.connect((ret.ip, 8000))
 connection = client_socket.makefile('wb')
 try:
@@ -32,6 +32,9 @@ try:
                 if self.event.wait(1):
                     try:
                         with connection_lock:
+                            data = np.frombuffer(data, dtype=np.uint8).reshape((ret.h, ret.w, 3))
+                            data *= -1
+                            data += 256
                             connection.write(struct.pack('<L', self.stream.tell()))
                             connection.flush()
                             self.stream.seek(0)
@@ -68,7 +71,7 @@ try:
         pool = [ImageStreamer() for i in range(4)]
         camera.resolution = (ret.w, ret.h)
         camera.framerate = ret.fps
-        time.sleep(2)
+        time.sleep(ret.sleep_time)
         start = time.time()
         camera.capture_sequence(streams(), 'rgb', use_video_port=True)
 

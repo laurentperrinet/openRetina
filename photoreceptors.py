@@ -16,9 +16,7 @@ try:
     with picamera.PiCamera() as camera:
         camera.resolution = (ret.w, ret.h)
         camera.framerate = ret.fps
-        # Start a preview and let the camera warm up for 2 seconds
-#         camera.start_preview()
-        time.sleep(2)
+        time.sleep(ret.sleep_time)
 
         # Note the start time and construct a stream to hold image data
         # temporarily (we could write it directly to connection but in this

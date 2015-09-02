@@ -16,11 +16,12 @@ class openRetina(object):
         self.fps = 90
 
         # simulation time
+        self.sleep_time = 1 # let the camera warm up for like 2 seconds
         self.T_SIM = 20 # in seconds
 
         # displaing options (server side)
-        self.display = True
         self.display = False
+        self.display = True
         self.do_fs = True
 
     def raw_resolution(self):
