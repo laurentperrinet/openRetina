@@ -10,12 +10,12 @@ class openRetina(object):
         self.ip = '192.168.2.1'
         self.w, self.h = 320, 240
 #         self.w, self.h = 640, 480
-        # if rpi
+        # adjust resolution on the rpi
         self.raw_resolution()
-        self.fps = 30
+        self.fps = 90
 
         # simulation time
-        self.T_SIM = 30 # in seconds
+        self.T_SIM = 10 # in seconds
 
         # displaing options (server side)
         self.display = True

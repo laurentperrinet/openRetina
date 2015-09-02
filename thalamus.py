@@ -6,6 +6,15 @@ import numpy as np
 from openRetina import openRetina
 ret = openRetina()
 
+# Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
+# all interfaces)
+server_socket = socket.socket()
+server_socket.bind(('0.0.0.0', 8000))
+server_socket.listen(0)
+
+# Accept a single connection and make a file-like object out of it
+connection = server_socket.accept()[0].makefile('rb')
+
 if ret.display:
     import array
     import pyglet
@@ -55,32 +64,34 @@ if ret.display:
 #
     @win_0.event
     def on_draw():
-            """Glut init function."""
-            N_X, N_Y = ret.w, ret.h
-            tmpList = np.random.randint(0, high=255, size=3 * N_X * N_Y).tolist()
-            gl.glClearColor ( 0, 0, 0, 0 )
-            gl.glShadeModel( gl.GL_SMOOTH )
-            gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_REPEAT )
-            gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_REPEAT )
-            gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR )
-            gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR )
-            gl.glTexImage2D( gl.GL_TEXTURE_2D, 0, 3, N_X, N_Y, 0,
-                                     gl.GL_RGB, gl.GL_UNSIGNED_BYTE, array.array( 'B', tmpList ).tostring() )
-            gl.glEnable( gl.GL_TEXTURE_2D )
+        global data
+        """Glut init function."""
+        N_X, N_Y = ret.w, ret.h
+#         tmpList = np.random.randint(0, high=255, size=3 * N_X * N_Y).tolist()
+        gl.glClearColor ( 0, 0, 0, 0 )
+        gl.glShadeModel( gl.GL_SMOOTH )
+        gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_REPEAT )
+        gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_REPEAT )
+        gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR )
+        gl.glTexParameterf( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR )
+        gl.glTexImage2D( gl.GL_TEXTURE_2D, 0, 3, N_X, N_Y, 0,
+                                 gl.GL_RGB, gl.GL_UNSIGNED_BYTE, 
+                                 array.array( 'B', data.ravel().tolist() ).tostring() )
+        gl.glEnable( gl.GL_TEXTURE_2D )
 
-            """Glut display function."""
-            gl.glClear( gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
-            gl.glColor3f( 1, 1, 1 )
-            gl.glBegin( gl.GL_QUADS )
-            gl.glTexCoord2f( 0, 1 )
-            gl.glVertex3f( -1.0, 1.0, 0 )
-            gl.glTexCoord2f( 0, 0 )
-            gl.glVertex3f( -1.0, -1.0, 0 )
-            gl.glTexCoord2f( 1, 0 )
-            gl.glVertex3f( 1.0, -1.0, 0 )
-            gl.glTexCoord2f( 1, 1 )
-            gl.glVertex3f( 1.0, 1.0, 0 )
-            gl.glEnd(  )
+        """Glut display function."""
+        gl.glClear( gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
+        gl.glColor3f( 1, 1, 1 )
+        gl.glBegin( gl.GL_QUADS )
+        gl.glTexCoord2f( 0, 1 )
+        gl.glVertex3f( -1.0, 1.0, 0 )
+        gl.glTexCoord2f( 0, 0 )
+        gl.glVertex3f( -1.0, -1.0, 0 )
+        gl.glTexCoord2f( 1, 0 )
+        gl.glVertex3f( 1.0, -1.0, 0 )
+        gl.glTexCoord2f( 1, 1 )
+        gl.glVertex3f( 1.0, 1.0, 0 )
+        gl.glEnd(  )
 
     @win_0.event
     def on_key_press(symbol, modifiers):
@@ -99,41 +110,54 @@ if ret.display:
 
     import time
     t0 = time.time()
-    def callback(dt):
-        global t0
-        print 'FPS=', 1./(time.time()-t0)
-        t0 = time.time()
 
-    pyglet.clock.schedule(callback)
-    pyglet.app.run()
-# Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
-# all interfaces)
-server_socket = socket.socket()
-server_socket.bind(('0.0.0.0', 8000))
-server_socket.listen(0)
-
-# Accept a single connection and make a file-like object out of it
-connection = server_socket.accept()[0].makefile('rb')
 try:
-    while True:
-        # Read the length of the image as a 32-bit unsigned int. If the
-        # length is zero, quit the loop
-        image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
-        if not image_len:
-            break
-        # Construct a stream to hold the image data and read the image
-        # data from the connection
-        image_stream = io.BytesIO()
-        image_stream.write(connection.read(image_len))
-        # Rewind the stream, open it as an image with PIL and do some
-        # processing on it
-        image_stream.seek(0)
-        data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
-        data = data.reshape(ret.h, ret.w, 3)
-        print('Image is ', data.shape)
+    if ret.display:
+        def callback(dt):
+            global data, t0
+            try:
+                # Read the length of the image as a 32-bit unsigned int. If the
+                # length is zero, quit the loop
+                image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
+#             if not image_len:
+#                 break
+                # Construct a stream to hold the image data and read the image
+                # data from the connection
+                image_stream = io.BytesIO()
+                image_stream.write(connection.read(image_len))
+                # Rewind the stream, open it as an image with PIL and do some
+                # processing on it
+                image_stream.seek(0)
+                data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
+                data = data.reshape(ret.h, ret.w, 3)
+                print('Image is ', data.shape)
+                print 'FPS=', 1./(time.time()-t0)
+                t0 = time.time()
+            except:
+                pass
+#                 import sys
+#                 sys.exit()
+        pyglet.clock.schedule(callback)
+        pyglet.app.run()
+    else:
+        while True:
+            # Read the length of the image as a 32-bit unsigned int. If the
+            # length is zero, quit the loop
+            image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
+            if not image_len:
+                break
+            # Construct a stream to hold the image data and read the image
+            # data from the connection
+            image_stream = io.BytesIO()
+            image_stream.write(connection.read(image_len))
+            # Rewind the stream, open it as an image with PIL and do some
+            # processing on it
+            image_stream.seek(0)
+            data = np.fromstring(image_stream.getvalue(), dtype=np.uint8)
+            data = data.reshape(ret.h, ret.w, 3)
+            print('Image is ', data.shape)
+        import imageio
+        imageio.imwrite('capture.png', data)
 finally:
     connection.close()
     server_socket.close()
-
-import imageio
-imageio.imwrite('capture.png', data)
