@@ -33,20 +33,7 @@ try:
                 if self.event.wait(1):
                     try:
                         with connection_lock:
-#                             self.stream.seek(0)
-                            # Read the image and do some processing on it
-                            # Construct a numpy array from the stream
-#                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
-#                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
-#                                     
-#                             print(data.min(), data.max())
-#                             data *= -1
-#                             data += 256
-#                             print(data.min(), data.max())
-                            connection.write(struct.pack('<L', self.stream.tell()))
-                            connection.flush()
-                            self.stream.seek(0)
-                            connection.write(self.stream.read())
+                            ret.code(self.stream, connection)
                     finally:
                         self.stream.seek(0)
                         self.stream.truncate()
