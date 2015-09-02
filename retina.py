@@ -5,17 +5,6 @@ import time
 import threading
 import picamera
 
-def bytes_to_rgb(ret, data):
-    """
-    Converts a bytes objects containing RGB/BGR data to a `numpy`_ array.
-    """
-    if len(data) != (ret.w * ret.h * 3):
-        raise picamera.PiCameraValueError(
-            'Incorrect buffer length for resolution %dx%d' % (width, height))
-    # Crop to the actual resolution
-    return np.frombuffer(data, dtype=np.uint8).\
-            reshape((ret.h, ret.w, 3))[:height, :width, :]
-
 from openRetina import openRetina
 ret = openRetina()
 

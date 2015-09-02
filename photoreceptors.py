@@ -14,8 +14,8 @@ client_socket.connect((ret.ip, 8000))
 connection = client_socket.makefile('wb')
 try:
     with picamera.PiCamera() as camera:
-        camera.resolution = (w, h)
-        camera.framerate = 30
+        camera.resolution = (ret.w, ret.h)
+        camera.framerate = ret.fps
         # Start a preview and let the camera warm up for 2 seconds
         camera.start_preview()
         time.sleep(2)
@@ -35,7 +35,7 @@ try:
             stream.seek(0)
             connection.write(stream.read())
             # If we've been capturing for more than 30 seconds, quit
-            if time.time() - start > 30:
+            if time.time() - start > ret.T_SIM:
                 break
             # Reset the stream for the next capture
             stream.seek(0)
