@@ -33,7 +33,7 @@ try:
                 if self.event.wait(1):
                     try:
                         with connection_lock:
-                            self.stream.seek(0)
+#                             self.stream.seek(0)
                             # Read the image and do some processing on it
                             # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
@@ -77,7 +77,7 @@ try:
             finish = time.time()
 
     with picamera.PiCamera() as camera:
-        pool = [ImageStreamer() for i in range(4)]
+        pool = [ImageStreamer() for i in range(ret.n_cores)]
         camera.resolution = (ret.w, ret.h)
         camera.framerate = ret.fps
         time.sleep(ret.sleep_time)

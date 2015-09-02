@@ -17,6 +17,7 @@ class openRetina(object):
         # adjust resolution on the rpi
         self.raw_resolution()
         self.fps = 90
+        self.n_cores = 4
 
         # simulation time
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
