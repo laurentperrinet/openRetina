@@ -25,8 +25,8 @@ class openRetina(object):
         self.refill_time = 0.01 # in seconds
 
         # displaing options (server side)
-        self.display = False
         self.display = True
+        self.display = False
         self.do_fs = True
 
     def raw_resolution(self):

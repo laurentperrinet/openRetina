@@ -106,31 +106,30 @@ if ret.display:
 #         elif symbol == pyglet.window.key.RIGHT:
 #             s.rot_heading_fp -= s.inc_heading_fp
 
-    import time
-    t0 = time.time()
-
+import time
+t0 = time.time()
 try:
     if ret.display:
         def callback(dt):
             global data, t0
             try:
                 data = ret.decode(connection)
-                print('Image is ', data.shape)
-                print 'FPS=', 1./(time.time()-t0)
+                print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
                 t0 = time.time()
             except:
-#                 data = np.zeros((ret.w, ret.h), dtype=np.uint8)
-#                 pass
                 import sys
                 sys.exit()
         pyglet.clock.schedule(callback)
         pyglet.app.run()
     else:
         while True:
-            data = ret.decode(connection)
-            print('Image is ', data.shape)
-        import imageio
-        imageio.imwrite('capture.png', data)
+            try:
+                data = ret.decode(connection)
+                print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
+                t0 = time.time()
+            finally:
+                import imageio
+                imageio.imwrite('capture.png', data)
 finally:
     connection.close()
     server_socket.close()
