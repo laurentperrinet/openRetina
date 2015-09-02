@@ -22,7 +22,7 @@ class openRetina(object):
 
         # simulation time
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
-        self.T_SIM = 15 # in seconds
+        self.T_SIM = 5 # in seconds
         self.refill_time = 0.1 # in seconds
 
         # displaing options (server side)
@@ -73,3 +73,4 @@ class openRetina(object):
         image_stream.seek(0)
         data = np.fromstring(image_stream.getvalue(), dtype=np.uint8).reshape(self.h, self.w, 3)
         return data
+
