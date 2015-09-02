@@ -34,6 +34,7 @@ try:
                     try:
                         with connection_lock:
                             data = np.frombuffer(self.stream, dtype=np.uint8).reshape((ret.h, ret.w, 3))
+                            print(data.min(), data.max())
                             data *= -1
                             data += 256
                             connection.write(struct.pack('<L', self.stream.tell()))
