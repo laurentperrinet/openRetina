@@ -31,7 +31,7 @@ try:
             connection.flush()
             # Rewind the stream and send the image data over the wire
             stream.seek(0)
-            connection.write(stream.read())
+#             connection.write(stream.read())
             # If we've been capturing for more than 30 seconds, quit
             if time.time() - start > ret.T_SIM:
                 finish = time.time()

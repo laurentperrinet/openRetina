@@ -42,8 +42,10 @@ try:
                             print(data.min(), data.max())
                             data *= -1
                             data += 256
+                            print(data.min(), data.max())
                             connection.write(struct.pack('<L', self.stream.tell()))
                             connection.flush()
+                            
                             self.stream.seek(0)
                             connection.write(self.stream.read())
                     finally:
