@@ -14,6 +14,13 @@ class openRetina(object):
         self.raw_resolution()
         self.fps = 30
 
+        # simulation time
+        self.T_SIM = 30 # in seconds
+
+        # displaing options (server side)
+        self.display = True
+        self.do_fs = True
+
     def raw_resolution(self):
         """
         Round a (width, height) tuple up to the nearest multiple of 32 horizontally

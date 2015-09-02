@@ -60,7 +60,7 @@ try:
 
     def streams():
         global count, finish
-        while finish - start < 30:
+        while finish - start < ret.T_SIM:
             with pool_lock:
                 if pool:
                     streamer = pool.pop()
