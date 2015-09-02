@@ -20,6 +20,7 @@ class openRetina(object):
 
         # displaing options (server side)
         self.display = True
+        self.display = False
         self.do_fs = True
 
     def raw_resolution(self):

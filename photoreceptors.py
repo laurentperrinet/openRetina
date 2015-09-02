@@ -17,7 +17,7 @@ try:
         camera.resolution = (ret.w, ret.h)
         camera.framerate = ret.fps
         # Start a preview and let the camera warm up for 2 seconds
-        camera.start_preview()
+#         camera.start_preview()
         time.sleep(2)
 
         # Note the start time and construct a stream to hold image data
