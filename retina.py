@@ -20,8 +20,8 @@ from openRetina import openRetina
 ret = openRetina()
 
 client_socket = socket.socket()
+print(ret.ip)
 client_socket.connect((ret.ip, 8000))
-
 connection = client_socket.makefile('wb')
 try:
     connection_lock = threading.Lock()
