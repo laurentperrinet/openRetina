@@ -7,6 +7,7 @@ Base class for the openRetina
 import io
 import struct
 import numpy as np
+import cv2
 
 class openRetina(object):
     def __init__(self):
