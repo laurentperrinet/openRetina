@@ -20,7 +20,6 @@ class openRetina(object):
         and 16 vertically (as this is what the Pi's camera module does for
         unencoded output).
         """
-        width, height = resolution
         self.w = (self.w + 31) // 32 * 32
         self.h = (self.h + 15) // 16 * 16
 
