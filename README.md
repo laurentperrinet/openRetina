@@ -1,15 +1,15 @@
-piRetina
-========
+OpenRetina
+==========
 
-This library contains some utilities to build an event-based retina with a Raspberry Pi along with its camera module.
+This library contains some utilities to build an event-based retina with a Raspberry Pi along with its camera module, your laptop's webcam or a (test) video.
 
-The goal is to setup an event-based camera with the following priorities:
+The goal is to setup an event-based image processing scheme with the following priorities:
 
 - be entirely open-sourced, accessible (in terms of access to the soft- and hard-ware),
 - be extensible for use in academics and education,
 - mimic key properties of the early visual system in rodents to primates.
 
-The architecture is based on the client (the raspberry pi) grasping images and transforming them into events.
+The architecture is based on the client (e.g. the raspberry pi) grasping images and transforming them into events which are then transferred through the network.
 
 Installation
 ------------
@@ -35,7 +35,6 @@ on the client, you should need to only setup picamera (and its dependencies).
 
 Example usage
 -------------
-
 
 on your server
 ``

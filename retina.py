@@ -6,7 +6,9 @@ import threading
 import picamera
 
 client_socket = socket.socket()
-client_socket.connect(('192.168.0.4', 8000))
+# client_socket.connect(('192.168.0.4', 8000))
+client_socket.connect(('192.168.2.1', 8000))
+
 connection = client_socket.makefile('wb')
 try:
     connection_lock = threading.Lock()
