@@ -54,12 +54,11 @@ class openRetina(object):
          # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
-        print(data.min(), data.max())
-        data *= -1
-        data += 256
+        print('before', data.min(), data.max())
+        data = 256 - data
         print(data.min(), data.max())
         stream.seek(0)
-        stream.write(array.array('B', image.ravel().tolist()).tostring())
+        stream.write(array.array('B', data.ravel().tolist()).tostring())
         # write the length of the stream and send it
         connection.write(struct.pack('<L', stream.tell()))
         connection.flush()
