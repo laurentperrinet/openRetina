@@ -51,6 +51,7 @@ class openRetina(object):
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         # "Decode" the image from the array, preserving colour
         image = cv2.imdecode(data, 1)
+        image = 256 - image
         # Construct a numpy array from the stream
 #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
 #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
