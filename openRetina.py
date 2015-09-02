@@ -11,10 +11,10 @@ import numpy as np
 class openRetina(object):
     def __init__(self):
         self.ip = '192.168.2.1'
-        self.w, self.h = 640, 480
-        self.w, self.h = 320, 240
-        self.w, self.h = 160, 120
         self.w, self.h = 1920,1080
+        self.w, self.h = 640, 480
+        self.w, self.h = 160, 120
+        self.w, self.h = 320, 240
         # adjust resolution on the rpi
         self.raw_resolution()
         self.fps = 90
