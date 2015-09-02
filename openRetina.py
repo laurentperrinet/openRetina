@@ -18,6 +18,7 @@ class openRetina(object):
         # adjust resolution on the rpi
         self.raw_resolution()
         self.fps = 90
+        self.led = False
         self.n_cores = 4
 
         # simulation time

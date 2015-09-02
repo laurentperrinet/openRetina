@@ -66,6 +66,7 @@ try:
         pool = [ImageStreamer() for i in range(ret.n_cores)]
         camera.resolution = (ret.w, ret.h)
         camera.framerate = ret.fps
+        camera.led = ret.led
         time.sleep(ret.sleep_time)
         start = time.time()
         camera.capture_sequence(streams(), 'rgb', use_video_port=True)
