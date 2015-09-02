@@ -49,7 +49,7 @@ class openRetina(object):
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         # "Decode" the image from the array, preserving colour
         image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-        image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
+#         image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
         r, image = cv2.threshold(image, 127, 255, 1)
         stream.seek(0)
         stream.write(array.array('B', image.ravel().tolist()).tostring())
