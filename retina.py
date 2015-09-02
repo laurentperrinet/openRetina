@@ -33,7 +33,7 @@ try:
                 if self.event.wait(1):
                     try:
                         with connection_lock:
-                            data = np.frombuffer(self.stream, dtype=np.uint8).reshape((ret.h, ret.w, 3))
+                            data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
                             print(data.min(), data.max())
                             data *= -1
                             data += 256
