@@ -29,6 +29,8 @@ class openRetina(object):
         self.display = True
         self.display = False
         self.do_fs = True
+        self.capture = False
+        self.capture = True
 
     def raw_resolution(self):
         """
