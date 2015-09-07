@@ -1,7 +1,7 @@
 OpenRetina
 ==========
 
-This library contains some utilities to build an event-based retina with a Raspberry Pi along with its camera module, your laptop's webcam or a (test) video.
+This library contains some utilities to build an event-based retina with open hardware such as a Raspberry Pi along with its camera module, your laptop's webcam or a (test) video.
 
 The goal is to setup an event-based image processing scheme with the following priorities:
 
@@ -15,7 +15,7 @@ Installation
 ------------
 
 ``
-	pip install git+https://meduz.github.com/piRetina
+	pip install git+https://meduz.github.com/openRetina
 ``
 
 Do not forget to setup the IP address of your RPi on the network.
@@ -44,3 +44,8 @@ on your RPi:
 ``
 	python retina.py
 ``
+
+Acknowledgements
+----------------
+
+The code heavily relies on the excellent exemples by  Dave Jones @ http://picamera.readthedocs.org
