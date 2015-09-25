@@ -23,13 +23,12 @@ Do not forget to setup the IP address of your RPi on the network.
 Dependencies
 -----------
 
-PiRetina needs on the server:
+The opanRetina library needs some dependencies to run:
 
 - numpy (http://numpy.scipy.org/). 
 - glumpy is dedicated to numpy visualization, 
 - You will also need IPython (http://ipython.scipy.org/) for running interactive sessions
-- Some demos require matplotlib (http://matplotlib.sourceforge.net/)
-http://www.scipy.org/) as well but this is optional.
+- Some demos require matplotlib (http://matplotlib.sourceforge.net/) and scipy (http://www.scipy.org/) as well but this is optional.
 
 on the client, you should need to only setup picamera (and its dependencies).
 
@@ -40,7 +39,7 @@ on your server
 ``
 	python thalamus.py
 ``
-on your RPi:
+on your RaspberryPi:
 ``
 	python retina.py
 ``
