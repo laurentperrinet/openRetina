@@ -7,6 +7,13 @@ try:
 except:
     print('no rpi')
     rpi = False
+    try:
+        import cv2
+        cap = cv2.VideoCapture(0)
+        do_cv = True
+    except:
+        do_cv = False
+
 from openRetina import openRetina
 ret = openRetina()
 
@@ -24,6 +31,7 @@ count = 0
 # # Make a file-like object out of the connection
 # connection = client_socket.makefile('wb')
 try:
+    start = time.time()
     if rpi:
         with picamera.PiCamera() as camera:
             camera.resolution = (ret.w, ret.h)
@@ -33,7 +41,6 @@ try:
             # temporarily (we could write it directly to connection but in this
             # case we want to find out the size of each capture first to keep
             # our protocol simple)
-            start = time.time()
             stream = io.BytesIO()
             for foo in camera.capture_continuous(stream, 'bgr', use_video_port=True):
                 ret.code(stream, connection)
@@ -47,11 +54,20 @@ try:
                 count += 1
         # Write a length of zero to the stream to signal we're done
         connection.write(struct.pack('<L', 0))
-
-    else:
-        start = time.time()
+    elif do_cv:
         while True:
-            print('waiting')
+            # Wait for next request from client
+            message = ret.socket.recv()
+            if ret.verb: print("Received request %s" % message)
+            if time.time() - start > ret.T_SIM:
+                finish = time.time()
+                break
+            returned, data = cap.read()
+            # Reset the stream for the next capture
+            ret.send_array(ret.socket, data.reshape((ret.h, ret.w, 3)))
+            count += 1
+    else:
+        while True:
             # Wait for next request from client
             message = ret.socket.recv()
             if ret.verb: print("Received request %s" % message)

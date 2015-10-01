@@ -1,4 +1,3 @@
-import io
 import zmq
 import struct
 import numpy as np
@@ -11,16 +10,6 @@ if ret.stream:
     if ret.verb: print("Connecting to server with port %s" % ret.port)
     ret.socket = context.socket(zmq.REQ)
     ret.socket.connect ("tcp://localhost:%s" % ret.port)
-
-# 
-# # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
-# # all interfaces)
-# server_socket = socket.socket()
-# server_socket.bind(('0.0.0.0', 8000))
-# server_socket.listen(0)
-# 
-# # Accept a single connection and make a file-like object out of it
-# connection = server_socket.accept()[0].makefile('rb')
 
 if ret.display:
     import array
@@ -69,6 +58,11 @@ if ret.display:
 
     @win_0.event
     def on_draw():
+#         global start
+#         if time.time()-start < ret.T_SIM + ret.sleep_time*2:
+#             import sys
+#             sys.exit()
+
         if ret.verb: print("Sending request")
         ret.socket.send (b"Hello")
 #                 data = ret.decode(connection)
@@ -125,12 +119,8 @@ start = time.time()
 try:
     if ret.display:
         def callback(dt):
-            global t0
-            try:
-                t0 = time.time()
-            except:
-                import sys
-                sys.exit()
+            global start, t0, ret
+            t0 = time.time()
         pyglet.clock.schedule(callback)
         pyglet.app.run()
     else:
