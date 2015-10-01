@@ -9,9 +9,12 @@ import struct
 import array
 import numpy as np
 import cv2
+import zmq
 
 class openRetina(object):
-    def __init__(self):
+    def __init__(self,
+                 verb = True,
+            ):
         self.ip = '192.168.2.1'
         self.w, self.h = 1920,1080
         self.w, self.h = 640, 480
@@ -23,6 +26,10 @@ class openRetina(object):
         self.led = False
         self.n_cores = 4
 
+        self.port = "5556"
+        self.verb = verb
+        self.stream = True
+
         # simulation time
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
         self.T_SIM = 5 # in seconds
@@ -32,6 +39,7 @@ class openRetina(object):
         self.display = False
         self.display = True
         self.do_fs = True
+        self.do_fs = False
         self.capture = True
         self.capture = False
 
@@ -80,4 +88,24 @@ class openRetina(object):
         image_stream.seek(0)
         data = np.fromstring(image_stream.getvalue(), dtype=np.uint8).reshape(self.h, self.w, 3)
         return data
+
+    # https://zeromq.github.io/pyzmq/serialization.html
+    def send_array(self, socket, A, flags=0, copy=True, track=False):
+        """send a numpy array with metadata"""
+        md = dict(
+            dtype = str(A.dtype),
+            shape = A.shape,
+        )
+        socket.send_json(md, flags|zmq.SNDMORE)
+        return socket.send(A, flags, copy=copy, track=track)
+
+    def recv_array(self, socket, flags=0, copy=True, track=False):
+        """recv a numpy array"""
+        md = socket.recv_json(flags=flags)
+        msg = socket.recv(flags=flags, copy=copy, track=track)
+#         buf = buffer(msg)
+        A = np.frombuffer(msg, dtype=md['dtype'])
+        return A.reshape(md['shape'])
+
+
 
