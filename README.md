@@ -39,7 +39,7 @@ Example usage
 
 on your server
 ``
-	python thalamus.py
+	python photoreceptors.py
 ``
 on your RaspberryPi:
 ``
