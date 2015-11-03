@@ -1,6 +1,10 @@
 import numpy as np
 import zmq
 import time
+
+from openRetina import openRetina
+ret = openRetina()
+
 try:
     import picamera
     rpi = True
@@ -10,18 +14,18 @@ except:
     try:
         import cv2
         cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, ret.w)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, ret.h)
         do_cv = True
     except:
         do_cv = False
 
-from openRetina import openRetina
-ret = openRetina()
 
 if ret.stream:
     context = zmq.Context()
     ret.socket = context.socket(zmq.REP)
     ret.socket.bind("tcp://*:%s" % ret.port)
-    if ret.verb: print("Running server on port: ", ret.port)
+    if ret.verb: print("Running retina on port: ", ret.port)
 
 # Connect a client socket to my_server:8000 (change my_server to the
 # hostname of your server)
@@ -45,7 +49,7 @@ try:
             for foo in camera.capture_continuous(stream, 'bgr', use_video_port=True):
                 ret.code(stream, connection)
                 # If we've been capturing for more than 30 seconds, quit
-                if time.time() - start > ret.T_SIM:
+                if message == b'RIP': 
                     finish = time.time()
                     break
                 # Reset the stream for the next capture
@@ -59,20 +63,21 @@ try:
             # Wait for next request from client
             message = ret.socket.recv()
             if ret.verb: print("Received request %s" % message)
-            if time.time() - start > ret.T_SIM:
+            if message == b'RIP': 
                 finish = time.time()
                 break
+            # grab a frame
             returned, data = cap.read()
-            # Reset the stream for the next capture
+            # stream it 
             ret.send_array(ret.socket, data.reshape((ret.h, ret.w, 3)))
             count += 1
     else:
+        print('sending noise')
         while True:
             # Wait for next request from client
             message = ret.socket.recv()
             if ret.verb: print("Received request %s" % message)
-
-            if time.time() - start > ret.T_SIM:
+            if message == b'RIP': 
                 finish = time.time()
                 break
             data = np.random.randint(0, high=128, size=(ret.w, ret.h, 3))
@@ -80,7 +85,7 @@ try:
             ret.send_array(ret.socket, data)
             count += 1
 finally:
+    print('Sent %d images in %d seconds at %.2ffps' % (
+            count, finish-start, count / (finish-start)))
     ret.socket.close()
 
-print('Sent %d images in %d seconds at %.2ffps' % (
-    count, finish-start, count / (finish-start)))

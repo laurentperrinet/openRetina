@@ -10,6 +10,8 @@ import array
 import numpy as np
 import cv2
 import zmq
+import time
+import sys
 
 class openRetina(object):
     def __init__(self,
@@ -19,8 +21,8 @@ class openRetina(object):
         self.w, self.h = 1920,1080
         self.w, self.h = 640, 480
         self.w, self.h = 320, 240
-        self.w, self.h = 160, 120
         self.w, self.h = 1280, 720
+        self.w, self.h = 160, 120
         # adjust resolution on the rpi
         self.raw_resolution()
         self.fps = 90
@@ -41,8 +43,8 @@ class openRetina(object):
         self.display = True
         self.do_fs = True
         self.do_fs = False
-        self.capture = True
         self.capture = False
+        self.capture = True
 
     def raw_resolution(self):
         """
@@ -108,5 +110,75 @@ class openRetina(object):
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
 
+from vispy import app
+from vispy import gloo
 
+vertex = """
+    attribute vec2 position;
+    attribute vec2 texcoord;
+    varying vec2 v_texcoord;
+    void main()
+    {
+        gl_Position = vec4(position, 0.0, 1.0);
+        v_texcoord = texcoord;
+    }
+"""
+
+fragment = """
+    uniform sampler2D texture;
+    varying vec2 v_texcoord;
+    void main()
+    {
+        gl_FragColor = texture2D(texture, v_texcoord);
+
+        // HACK: the image is in BGR instead of RGB.
+        float temp = gl_FragColor.r;
+        gl_FragColor.r = gl_FragColor.b;
+        gl_FragColor.b = temp;
+    }
+"""
+
+class Canvas(app.Canvas):
+    def __init__(self, retina):
+        self.retina = retina
+        app.Canvas.__init__(self, size=(640, 480), keys='interactive')
+        self.program = gloo.Program(vertex, fragment, count=4)
+        self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
+        self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
+        self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
+
+        width, height = self.physical_size
+        gloo.set_viewport(0, 0, width, height)
+        self._timer = app.Timer('auto', connect=self.on_timer, start=True)
+        self.start = time.time()
+        self.show()
+
+    def on_resize(self, event):
+        width, height = event.physical_size
+        gloo.set_viewport(0, 0, width, height)
+
+    def on_draw(self, event):
+        gloo.clear('black')
+        if self.retina.verb: print("Sending request")
+        if time.time()-self.start < self.retina.T_SIM: # + ret.sleep_time*2: 
+            self.retina.socket.send (b"Hello")
+        else:
+            self.retina.socket.send (b"RIP")
+            sys.exit()
+#                 data = self.retina.decode(connection)
+        data = self.retina.recv_array(self.retina.socket)
+        if self.retina.verb: 
+            print("Received reply ", data.shape, data.min(), data.max())
+        self.program['texture'][...] = data
+        self.program.draw('triangle_strip')
+
+
+    def on_timer(self, event):
+        self.update()
+
+
+if __name__ == '__main__':
+    c = Canvas()
+    app.run()
+    c.cap.release()
 
