@@ -15,9 +15,10 @@ import sys
 
 class openRetina(object):
     def __init__(self,
+                 model,
                  verb = True,
             ):
-        self.ip = '192.168.2.1'
+        self.model = model
         self.w, self.h = 1920,1080
         self.w, self.h = 640, 480
         self.w, self.h = 320, 240
@@ -28,14 +29,14 @@ class openRetina(object):
         self.fps = 90
         self.led = False
         self.n_cores = 4
-
-        self.port = "5566"
+        
+        if not 'ip' in self.model.keys(): self.model['ip']='localhost'
+        if not 'port' in self.model.keys(): self.model['port']='5566'
         self.verb = verb
-        self.stream = True
 
         # simulation time
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
-        self.T_SIM = 5 # in seconds
+        self.T_SIM = 2 # in seconds
         self.refill_time = 0.1 # in seconds
 
         # displaing options (server side)
@@ -54,6 +55,102 @@ class openRetina(object):
         """
         self.w = (self.w + 31) // 32 * 32
         self.h = (self.h + 15) // 16 * 16
+
+    def run(self):
+
+        if 'opencv' in self.model['input'] :
+            import cv2
+            cap = cv2.VideoCapture(0)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
+        elif 'picamera' in self.model['input'] :
+            import picamera
+            cap = picamera.PiCamera()
+            camera.resolution = (self.w, self.h)
+            camera.framerate = self.fps
+            time.sleep(self.sleep_time)
+
+        if 'stream' in self.model['output'] :
+            context = zmq.Context()
+            self.socket = context.socket(zmq.REP)
+            self.socket.bind("tcp://*:%s" % self.model['port'])
+            if self.verb: print("Running retina on port: ", self.model['port'])
+
+        if 'picamera' in self.model['input'] or  'opencv' in self.model['input'] :
+
+            count = 0
+            start = time.time()
+            if 'picamera' in self.model['input'] :
+                stream = io.BytesIO()
+                for foo in camera.capture_continuous(stream, 'bgr', use_video_port=True):
+                    self.code(stream, connection)
+                    # If we've been capturing for more than 30 seconds, quit
+                    if message == b'RIP': 
+                        finish = time.time()
+                        break
+                    # Reset the stream for the next capture
+                    stream.seek(0)
+                    stream.truncate()
+                    count += 1
+                # Write a length of zero to the stream to signal we're done
+                connection.write(struct.pack('<L', 0))
+            if 'opencv' in self.model['input'] :
+                while True:
+                    # Wait for next request from client
+                    message = self.socket.recv()
+                    if self.verb: print("Received request %s" % message)
+                    if message == b'RIP': 
+                        finish = time.time()
+                        break
+                    # grab a frame
+                    returned, data = cap.read()
+                    # stream it 
+                    self.send_array(self.socket, data.reshape((self.h, self.w, 3)))
+                    count += 1
+            if 'noise' in self.model['input'] :
+                while True:
+                    # Wait for next request from client
+                    message = self.socket.recv()
+                    if self.verb: print("Received request %s" % message)
+                    if message == b'RIP': 
+                        finish = time.time()
+                        break
+                    data = np.random.randint(0, high=128, size=(self.w, self.h, 3))
+                    # Reset the stream for the next capture
+                    self.send_array(self.socket, data)
+                    count += 1
+            print('Sent %d images in %d seconds at %.2ffps' % (
+                    count, finish-start, count / (finish-start)))
+            self.socket.close()
+
+        if 'stream' in self.model['input'] :
+            context = zmq.Context()
+            if self.verb: print("Connecting to retina with port %s" % self.model['port'])
+            self.socket = context.socket(zmq.REQ)
+            self.socket.connect ("tcp://%s:%s" % (self.model['ip'], self.model['port']))
+
+            t0 = time.time()
+            start = time.time()
+            try:
+                if 'display:' in self.model['output'] :
+                    from openRetina import Canvas
+                    from vispy import app
+                    c = Canvas(self)
+                    app.run()
+                else:
+                    while time.time()-start < self.T_SIM + self.sleep_time*2:
+                        if self.verb: print("Sending request")
+                        self.socket.send (b"Hello")
+                        data = self.recv_array(self.socket)
+                        if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
+                        t0 = time.time()
+
+                    if 'capture' in self.model['output'] :
+                        import imageio
+                        imageio.imwrite('capture.png', data)
+                    self.socket.send (b"RIP")
+            finally:
+                self.socket.close()
 
     def code(self, stream, connection):
         # Read the image and do some processing on it
