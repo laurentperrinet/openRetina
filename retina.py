@@ -32,7 +32,7 @@ try:
                 # Wait for the image to be written to the stream
                 if self.event.wait(1):
                     try:
-                        with connection_lock:
+                        with connection_lock :
                             ret.code(self.stream, connection)
                     finally:
                         self.stream.seek(0)
@@ -79,7 +79,7 @@ try:
 
     # Write the terminating 0-length to the connection to let the server
     # know we're done
-    with connection_lock:
+    with connection_lock :
         connection.write(struct.pack('<L', 0))
 
 finally:
