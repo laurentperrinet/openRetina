@@ -39,7 +39,7 @@ Example usage
 
 on your server
 ``
-	python thalamus.py
+	python photoreceptors.py
 ``
 on your RaspberryPi:
 ``
@@ -50,3 +50,8 @@ Acknowledgements
 ----------------
 
 The part of the code for the raspberry client heavily relies on the excellent exemples by  Dave Jones @ http://picamera.readthedocs.org
+
+TODO
+----
+
+* use http://docs.opencv.org/master/dc/d54/classcv_1_1bioinspired_1_1Retina.html 
