@@ -21,13 +21,53 @@ class PhotoReceptor:
     def __init__(self, DOWNSCALE=1):
         import cv2
         self.cap = cv2.VideoCapture(0)
+
+
+        #----Which camera handler?----
+        try:
+            #On Raspbian
+            import picamera
+            import picamera.array
+
+            rpi = True
+
+            with picamera.PiCamera() as camera:
+                camera.start_preview()
+                with picamera.array.PiRGBArray(camera) as stream:
+                    camera.capture(stream, format='rgb')
+                    # At this point the image is available as stream.array
+                    frame = stream.array
+
+        except:
+            #On other Unix System
+            print('no rpi')
+
+            rpi = False
+
+            try:
+                import cv2
+                cap = cv2.VideoCapture(0)
+                if not cap.isOpened(): toto
+
+                do_cv = True
+
+            except:
+
+                do_cv = False
+
+            if do_cv:
+                ret, frame = cap.read()
+                cap.release()
+
+        #-------------------------------#
+
         self.DOWNSCALE = DOWNSCALE
         if DOWNSCALE > 1:
              W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
              H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
              self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
              self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
-         self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
     def print_info(self):
         for prop in [
@@ -45,7 +85,10 @@ class PhotoReceptor:
                     'TILT', 'TRIGGER', 'TRIGGER_DELAY', 'VIEWFINDER',
                     'WHITE_BALANCE_BLUE_U', 'WHITE_BALANCE_RED_V', 'ZOOM'
                     ]:
-            print(prop, self.cap.get(eval('cv2.CAP_PROP_' + prop)))
+            print(prop, self.get_oo_info(prop))
+
+    def get_oo_info(self, info):
+        return self.cap.get(eval('cv2.CAP_PROP_' + info))
 
     def grab(self):
         ret, frame = self.cap.read()
