@@ -13,6 +13,48 @@ import zmq
 import time
 import sys
 
+from multiprocessing.pool import ThreadPool
+from collections import deque
+
+
+class PhotoReceptor:
+    def __init__(self, DOWNSCALE=1):
+        import cv2
+        self.cap = cv2.VideoCapture(0)
+        self.DOWNSCALE = DOWNSCALE
+        if DOWNSCALE > 1:
+             W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+             H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
+             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
+         self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+
+    def print_info(self):
+        for prop in [
+                    'APERTURE', 'AUTO_EXPOSURE',
+                    'BACKLIGHT', 'BRIGHTNESS', 'CONTRAST', 'CONVERT_RGB',
+                    'EXPOSURE', 'EXPOSUREPROGRAM',
+                    'FOCUS', 'FORMAT',
+                    'FOURCC', 'FPS',
+                    'FRAME_COUNT', 'FRAME_HEIGHT',
+                    'FRAME_WIDTH', 'GAIN',
+                    'GAMMA', 'GUID',
+                    'HUE', 'IRIS', 'ISO_SPEED', 'MODE', 'PAN', 'POS_AVI_RATIO',
+                    'POS_FRAMES', 'POS_MSEC', 'RECTIFICATION', 'ROLL',
+                    'SATURATION', 'SETTINGS', 'SHARPNESS', 'SPEED', 'TEMPERATURE',
+                    'TILT', 'TRIGGER', 'TRIGGER_DELAY', 'VIEWFINDER',
+                    'WHITE_BALANCE_BLUE_U', 'WHITE_BALANCE_RED_V', 'ZOOM'
+                    ]:
+            print(prop, self.cap.get(eval('cv2.CAP_PROP_' + prop)))
+
+    def grab(self):
+        ret, frame = self.cap.read()
+        return frame
+
+    def close(self):
+        self.cap.release()
+
+
 class openRetina(object):
     def __init__(self,
                  model,
