@@ -2,9 +2,12 @@
 import subprocess
 p = subprocess.Popen(['/usr/local/bin/ipython', 'photoreceptors.py'])
 from openRetina import openRetina
-thalamus = openRetina(model=dict(layer='thalamus', input=['stream'], output=['display', 'capture']))
+thalamus = openRetina(model=dict(layer='thalamus', 
+    input=['stream'], output=['display', 'capture'], 
+    T_SIM=120))
 thalamus.run()
-# 
+
+
 # import sys
 # sys.exit()
 # 

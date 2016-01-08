@@ -23,7 +23,10 @@ class openRetina(object):
         self.w, self.h = 640, 480
         self.w, self.h = 320, 240
         self.w, self.h = 1280, 720
-        self.w, self.h = 160, 120
+        self.w, self.h = 160, 128
+
+        self.image_old = np.zeros((self.h, self.w))
+
         # adjust resolution on the rpi
         self.raw_resolution()
         self.fps = 90
@@ -36,12 +39,10 @@ class openRetina(object):
 
         # simulation time
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
-        self.T_SIM = 2 # in seconds
+        if not 'T_SIM' in self.model.keys(): self.model['T_SIM'] = 2 # in seconds
         self.refill_time = 0.1 # in seconds
 
         # displaing options (server side)
-        self.display = False
-        self.display = True
         self.do_fs = True
         self.do_fs = False
         self.capture = False
@@ -103,10 +104,12 @@ class openRetina(object):
                         finish = time.time()
                         break
                     # grab a frame
-                    returned, data = cap.read()
+                    returned, cam_data = cap.read()
+                    data = self.code(cam_data.reshape((self.h, self.w, 3)))
                     # stream it 
-                    self.send_array(self.socket, data.reshape((self.h, self.w, 3)))
+                    self.send_array(self.socket, data)
                     count += 1
+
             if 'noise' in self.model['input'] :
                 while True:
                     # Wait for next request from client
@@ -132,13 +135,14 @@ class openRetina(object):
             t0 = time.time()
             start = time.time()
             try:
-                if 'display:' in self.model['output'] :
+                if 'display' in self.model['output'] :
                     from openRetina import Canvas
                     from vispy import app
                     c = Canvas(self)
                     app.run()
                 else:
-                    while time.time()-start < self.T_SIM + self.sleep_time*2:
+                    print('headless mode')
+                    while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
                         if self.verb: print("Sending request")
                         self.socket.send (b"Hello")
                         data = self.recv_array(self.socket)
@@ -148,46 +152,65 @@ class openRetina(object):
                     if 'capture' in self.model['output'] :
                         import imageio
                         imageio.imwrite('capture.png', data)
-                    self.socket.send (b"RIP")
             finally:
+                self.socket.send (b"RIP")
                 self.socket.close()
 
-    def code(self, stream, connection):
-        # Read the image and do some processing on it
-        data = np.fromstring(stream.getvalue(), dtype=np.uint8)
-#         # "Decode" the image from the array, preserving colour
-#         image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-# #         image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
-#         r, image = cv2.threshold(image, 127, 255, 1)
-         # Construct a numpy array from the stream
-#                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
-#                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
-        print('before', data.min(), data.max())
-        data = 255 - data
-        print(data.min(), data.max())
-        stream.seek(0)
-        stream.write(array.array('B', data.ravel().tolist()).tostring())
-        # write the length of the stream and send it
-        connection.write(struct.pack('<L', stream.tell()))
-        connection.flush()
-        stream.seek(0)
-        connection.write(stream.read())
-
-    def decode(self, connection):
-        # Read the length of the image as a 32-bit unsigned int. If the
-        # length is zero, quit the loop
-        image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
-#             if not image_len:
-#                 break
-        # Construct a stream to hold the image data and read the image
-        # data from the connection
-        image_stream = io.BytesIO()
-        image_stream.write(connection.read(image_len))
-        # Rewind the stream, open it as an image with PIL and do some
-        # processing on it
-        image_stream.seek(0)
-        data = np.fromstring(image_stream.getvalue(), dtype=np.uint8).reshape(self.h, self.w, 3)
+    def code(self, image):#stream, connection):
+#         data = image.copy()
+        # normalize
+#         data -= data.min()
+#         data /= data.max()
+        data = np.zeros_like(image)
+        image = image.astype(np.float)
+        image = image.sum(axis=-1)
+        image /= image.std()
+        dimage = image - self.image_old 
+        data[:, :, 0] = dimage > dimage.mean() + dimage.std()
+        data[:, :, -1] = dimage < dimage.mean() - dimage.std()
+        self.image_old = image
         return data
+        # Read the image and do some processing on it
+#         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
+# #         # "Decode" the image from the array, preserving colour
+# #         image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
+# # #         image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
+# #         r, image = cv2.threshold(image, 127, 255, 1)
+#          # Construct a numpy array from the stream
+# #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
+# #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
+#         print('before', data.min(), data.max())
+#         data = 255 - data
+#         print(data.min(), data.max())
+#         stream.seek(0)
+#         stream.write(array.array('B', data.ravel().tolist()).tostring())
+#         # write the length of the stream and send it
+#         connection.write(struct.pack('<L', stream.tell()))
+#         connection.flush()
+#         stream.seek(0)
+#         connection.write(stream.read())
+
+    def decode(self, data):
+        image = data.copy()
+        # normalize
+        print("Image  ", image.shape, image.min(), image.max())
+        
+        return image
+#         
+#         # Read the length of the image as a 32-bit unsigned int. If the
+#         # length is zero, quit the loop
+#         image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
+# #             if not image_len:
+# #                 break
+#         # Construct a stream to hold the image data and read the image
+#         # data from the connection
+#         image_stream = io.BytesIO()
+#         image_stream.write(connection.read(image_len))
+#         # Rewind the stream, open it as an image with PIL and do some
+#         # processing on it
+#         image_stream.seek(0)
+#         data = np.fromstring(image_stream.getvalue(), dtype=np.uint8).reshape(self.h, self.w, 3)
+#         return data
 
     # https://zeromq.github.io/pyzmq/serialization.html
     def send_array(self, socket, A, flags=0, copy=True, track=False):
@@ -237,13 +260,13 @@ fragment = """
 
 class Canvas(app.Canvas):
     def __init__(self, retina):
+        app.use_app('pyglet')
         self.retina = retina
-        app.Canvas.__init__(self, size=(640, 480), keys='interactive')
+        app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
         self.program = gloo.Program(vertex, fragment, count=4)
         self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
         self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
         self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
-
         width, height = self.physical_size
         gloo.set_viewport(0, 0, width, height)
         self._timer = app.Timer('auto', connect=self.on_timer, start=True)
@@ -257,16 +280,15 @@ class Canvas(app.Canvas):
     def on_draw(self, event):
         gloo.clear('black')
         if self.retina.verb: print("Sending request")
-        if time.time()-self.start < self.retina.T_SIM: # + ret.sleep_time*2: 
+        if time.time()-self.start < self.retina.model['T_SIM']: # + ret.sleep_time*2: 
             self.retina.socket.send (b"Hello")
         else:
-            self.retina.socket.send (b"RIP")
             sys.exit()
-#                 data = self.retina.decode(connection)
         data = self.retina.recv_array(self.retina.socket)
         if self.retina.verb: 
             print("Received reply ", data.shape, data.min(), data.max())
-        self.program['texture'][...] = data
+        image = self.retina.decode(data)
+        self.program['texture'][...] = (image*128).astype(np.uint8)
         self.program.draw('triangle_strip')
 
 
