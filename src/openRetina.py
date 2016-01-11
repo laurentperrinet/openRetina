@@ -20,8 +20,6 @@ from collections import deque
 class PhotoReceptor:
     def __init__(self, DOWNSCALE=1):
         import cv2
-        self.cap = cv2.VideoCapture(0)
-
 
         #----Which camera handler?----
         try:
@@ -33,26 +31,23 @@ class PhotoReceptor:
 
             with picamera.PiCamera() as camera:
                 camera.start_preview()
+                time.sleep()
                 with picamera.array.PiRGBArray(camera) as stream:
-                    camera.capture(stream, format='rgb')
+                    cap = camera.capture(stream, format='rgb')
                     # At this point the image is available as stream.array
                     frame = stream.array
 
         except:
             #On other Unix System
-            print('no rpi')
-
             rpi = False
 
             try:
-                import cv2
                 cap = cv2.VideoCapture(0)
                 if not cap.isOpened(): toto
 
                 do_cv = True
 
             except:
-
                 do_cv = False
 
             if do_cv:
@@ -95,8 +90,10 @@ class PhotoReceptor:
         return frame
 
     def close(self):
-        self.cap.release()
-
+        if rpi :
+            camera.stop_preview()
+        else :
+            self.cap.release()
 
 class openRetina(object):
     def __init__(self,
