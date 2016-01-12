@@ -27,11 +27,11 @@ class PhotoReceptor:
             import picamera
             import picamera.array
 
-            rpi = True
+            self.rpi = True
 
             with picamera.PiCamera() as camera:
                 camera.start_preview()
-                time.sleep()
+                time.sleep(3)
                 with picamera.array.PiRGBArray(camera) as stream:
                     cap = camera.capture(stream, format='rgb')
                     # At this point the image is available as stream.array
@@ -39,30 +39,26 @@ class PhotoReceptor:
 
         except:
             #On other Unix System
-            rpi = False
+            self.rpi = False
 
             try:
-                cap = cv2.VideoCapture(0)
-                if not cap.isOpened(): toto
+                self.cap = cv2.VideoCapture(0)
+                print (self.cap != NULL)
+                if not self.cap.isOpened(): toto
 
-                do_cv = True
+                self.DOWNSCALE = DOWNSCALE
+                if DOWNSCALE > 1:
+                    W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                    H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
+                self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
             except:
-                do_cv = False
-
-            if do_cv:
-                ret, frame = cap.read()
-                cap.release()
+                print('Unable to capture video')
 
         #-------------------------------#
 
-        self.DOWNSCALE = DOWNSCALE
-        if DOWNSCALE > 1:
-             W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-             H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
-             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
-        self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
     def print_info(self):
         for prop in [
@@ -90,7 +86,7 @@ class PhotoReceptor:
         return frame
 
     def close(self):
-        if rpi :
+        if self.rpi :
             camera.stop_preview()
         else :
             self.cap.release()
