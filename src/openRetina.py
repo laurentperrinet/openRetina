@@ -31,11 +31,8 @@ class PhotoReceptor:
 
             with picamera.PiCamera() as camera:
                 camera.start_preview()
-                time.sleep(3)
-                with picamera.array.PiRGBArray(camera) as stream:
-                    cap = camera.capture(stream, format='rgb')
-                    # At this point the image is available as stream.array
-                    frame = stream.array
+                with picamera.array.PiRGBArray(camera) as self.stream:
+                    cap = camera.capture(self.stream, format='rgb')
 
         except:
             #On other Unix System
@@ -81,7 +78,11 @@ class PhotoReceptor:
         return self.cap.get(eval('cv2.CAP_PROP_' + info))
 
     def grab(self):
-        ret, frame = self.cap.read()
+        if self.rpi:
+            # At this point the image is available as stream.array
+            frame = self.stream.array
+        else:
+            ret, frame = self.cap.read()
         return frame
 
     def close(self):
