@@ -19,7 +19,7 @@ from multiprocessing.pool import ThreadPool
 from collections import deque
 
 class PhotoReceptor:
-    def __init__(self, cam_id=0, DOWNSCALE=1):
+    def __init__(self, cam_id=0, DOWNSCALE=1, verbose=True):
 
         #----Which camera handler?----
         try:
@@ -33,7 +33,7 @@ class PhotoReceptor:
             self.camera.start_preview()
 
             if DOWNSCALE > 1:
-                print( 'DOWNSCALE NOT IMPLEMENTED YET on the π' )
+                if verbose: print( 'DOWNSCALE NOT IMPLEMENTED YET on the π' )
 
             with picamera.array.PiRGBArray(self.camera) as self.stream:
                 self.camera.capture(self.stream, format='rgb')
@@ -55,7 +55,7 @@ class PhotoReceptor:
                 self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
             except:
-                print('Unable to capture video')
+                if verbose: print('Unable to capture video')
         #-------------------------------#
 
     def grab(self):
@@ -63,7 +63,8 @@ class PhotoReceptor:
             # At this point the image is available as stream.array
             frame = self.stream.array
         else:
-            ret, frame = self.cap.read()
+            ret, frame_bgr = self.cap.read()
+            frame = frame_bgr[:, :, ::-1]
         return frame
 
     def close(self):
@@ -72,6 +73,7 @@ class PhotoReceptor:
             self.camera.close()
         else :
             self.cap.release()
+            del self.cap
 
 class openRetina(object):
     def __init__(self,
