@@ -69,6 +69,7 @@ class PhotoReceptor:
     def close(self):
         if self.rpi :
             self.camera.stop_preview()
+            self.camera.close()
         else :
             self.cap.release()
 
