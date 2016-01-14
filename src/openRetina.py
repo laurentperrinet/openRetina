@@ -16,10 +16,8 @@ import sys
 from multiprocessing.pool import ThreadPool
 from collections import deque
 
-
 class PhotoReceptor:
-    def __init__(self, DOWNSCALE=1):
-        import cv2
+    def __init__(self, cam_id=0, DOWNSCALE=1):
 
         #----Which camera handler?----
         try:
@@ -29,8 +27,11 @@ class PhotoReceptor:
 
             self.rpi = True
 
-            self.camera = picamera.PiCamera()
+            self.camera = picamera.PiCamera(cam_id)
             self.camera.start_preview()
+
+            if DOWNSCALE > 1:
+                print( 'DOWNSCALE NOT IMPLEMENTED YET on the π' )
 
             with picamera.array.PiRGBArray(self.camera) as self.stream:
                 self.camera.capture(self.stream, format='rgb')
@@ -40,7 +41,7 @@ class PhotoReceptor:
             self.rpi = False
 
             try:
-                self.cap = cv2.VideoCapture(0)
+                self.cap = cv2.VideoCapture(cam_id)
                 if not self.cap.isOpened(): toto
 
                 self.DOWNSCALE = DOWNSCALE
@@ -54,28 +55,6 @@ class PhotoReceptor:
             except:
                 print('Unable to capture video')
         #-------------------------------#
-
-
-    def print_info(self):
-        for prop in [
-                    'APERTURE', 'AUTO_EXPOSURE',
-                    'BACKLIGHT', 'BRIGHTNESS', 'CONTRAST', 'CONVERT_RGB',
-                    'EXPOSURE', 'EXPOSUREPROGRAM',
-                    'FOCUS', 'FORMAT',
-                    'FOURCC', 'FPS',
-                    'FRAME_COUNT', 'FRAME_HEIGHT',
-                    'FRAME_WIDTH', 'GAIN',
-                    'GAMMA', 'GUID',
-                    'HUE', 'IRIS', 'ISO_SPEED', 'MODE', 'PAN', 'POS_AVI_RATIO',
-                    'POS_FRAMES', 'POS_MSEC', 'RECTIFICATION', 'ROLL',
-                    'SATURATION', 'SETTINGS', 'SHARPNESS', 'SPEED', 'TEMPERATURE',
-                    'TILT', 'TRIGGER', 'TRIGGER_DELAY', 'VIEWFINDER',
-                    'WHITE_BALANCE_BLUE_U', 'WHITE_BALANCE_RED_V', 'ZOOM'
-                    ]:
-            print(prop, self.get_oo_info(prop))
-
-    def get_oo_info(self, info):
-        return self.cap.get(eval('cv2.CAP_PROP_' + info))
 
     def grab(self):
         if self.rpi:
