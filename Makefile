@@ -27,8 +27,7 @@ pypi_docs:
 	open https://pypi.python.org/pypi?action=pkg_edit&name=$NAME
 
 install_dev:
-	pip3 uninstall -y $(NAME) 
-	pip3 install -e .
+	pip3 uninstall -y $(NAME) ; pip3 install -e .
 
 todo:
 	grep -R * (^|#)[ ]*(TODO|FIXME|XXX|HINT|TIP)( |:)([^#]*)
