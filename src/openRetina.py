@@ -13,6 +13,84 @@ import zmq
 import time
 import sys
 
+from multiprocessing.pool import ThreadPool
+from collections import deque
+
+
+class PhotoReceptor:
+    def __init__(self, DOWNSCALE=1):
+        import cv2
+
+        #----Which camera handler?----
+        try:
+            #On Raspbian
+            import picamera
+            import picamera.array
+
+            self.rpi = True
+
+            self.camera = picamera.PiCamera()
+            self.camera.start_preview()
+
+            with picamera.array.PiRGBArray(self.camera) as self.stream:
+                self.camera.capture(self.stream, format='rgb')
+
+        except:
+            #On other Unix System
+            self.rpi = False
+
+            try:
+                self.cap = cv2.VideoCapture(0)
+                if not self.cap.isOpened(): toto
+
+                self.DOWNSCALE = DOWNSCALE
+                if DOWNSCALE > 1:
+                    W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                    H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
+                self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+
+            except:
+                print('Unable to capture video')
+        #-------------------------------#
+
+
+    def print_info(self):
+        for prop in [
+                    'APERTURE', 'AUTO_EXPOSURE',
+                    'BACKLIGHT', 'BRIGHTNESS', 'CONTRAST', 'CONVERT_RGB',
+                    'EXPOSURE', 'EXPOSUREPROGRAM',
+                    'FOCUS', 'FORMAT',
+                    'FOURCC', 'FPS',
+                    'FRAME_COUNT', 'FRAME_HEIGHT',
+                    'FRAME_WIDTH', 'GAIN',
+                    'GAMMA', 'GUID',
+                    'HUE', 'IRIS', 'ISO_SPEED', 'MODE', 'PAN', 'POS_AVI_RATIO',
+                    'POS_FRAMES', 'POS_MSEC', 'RECTIFICATION', 'ROLL',
+                    'SATURATION', 'SETTINGS', 'SHARPNESS', 'SPEED', 'TEMPERATURE',
+                    'TILT', 'TRIGGER', 'TRIGGER_DELAY', 'VIEWFINDER',
+                    'WHITE_BALANCE_BLUE_U', 'WHITE_BALANCE_RED_V', 'ZOOM'
+                    ]:
+            print(prop, self.get_oo_info(prop))
+
+    def get_oo_info(self, info):
+        return self.cap.get(eval('cv2.CAP_PROP_' + info))
+
+    def grab(self):
+        if self.rpi:
+            # At this point the image is available as stream.array
+            frame = self.stream.array
+        else:
+            ret, frame = self.cap.read()
+        return frame
+
+    def close(self):
+        if self.rpi :
+            self.camera.stop_preview()
+        else :
+            self.cap.release()
+
 class openRetina(object):
     def __init__(self,
                  model,
@@ -230,74 +308,76 @@ class openRetina(object):
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
 
-from vispy import app
-from vispy import gloo
+    try : 
+        from vispy import app
+        from vispy import gloo
 
-vertex = """
-    attribute vec2 position;
-    attribute vec2 texcoord;
-    varying vec2 v_texcoord;
-    void main()
-    {
-        gl_Position = vec4(position, 0.0, 1.0);
-        v_texcoord = texcoord;
-    }
-"""
+        vertex = """
+            attribute vec2 position;
+            attribute vec2 texcoord;
+            varying vec2 v_texcoord;
+            void main()
+            {
+                gl_Position = vec4(position, 0.0, 1.0);
+                v_texcoord = texcoord;
+            }
+        """
 
-fragment = """
-    uniform sampler2D texture;
-    varying vec2 v_texcoord;
-    void main()
-    {
-        gl_FragColor = texture2D(texture, v_texcoord);
+        fragment = """
+            uniform sampler2D texture;
+            varying vec2 v_texcoord;
+            void main()
+            {
+                gl_FragColor = texture2D(texture, v_texcoord);
 
-        // HACK: the image is in BGR instead of RGB.
-        float temp = gl_FragColor.r;
-        gl_FragColor.r = gl_FragColor.b;
-        gl_FragColor.b = temp;
-    }
-"""
+                // HACK: the image is in BGR instead of RGB.
+                float temp = gl_FragColor.r;
+                gl_FragColor.r = gl_FragColor.b;
+                gl_FragColor.b = temp;
+            }
+        """
 
-class Canvas(app.Canvas):
-    def __init__(self, retina):
-        app.use_app('pyglet')
-        self.retina = retina
-        app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
-        self.program = gloo.Program(vertex, fragment, count=4)
-        self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
-        self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
-        self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
-        width, height = self.physical_size
-        gloo.set_viewport(0, 0, width, height)
-        self._timer = app.Timer('auto', connect=self.on_timer, start=True)
-        self.start = time.time()
-        self.show()
+        class Canvas(app.Canvas):
+            def __init__(self, retina):
+                app.use_app('pyglet')
+                self.retina = retina
+                app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
+                self.program = gloo.Program(vertex, fragment, count=4)
+                self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
+                self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
+                self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
+                width, height = self.physical_size
+                gloo.set_viewport(0, 0, width, height)
+                self._timer = app.Timer('auto', connect=self.on_timer, start=True)
+                self.start = time.time()
+                self.show()
 
-    def on_resize(self, event):
-        width, height = event.physical_size
-        gloo.set_viewport(0, 0, width, height)
+            def on_resize(self, event):
+                width, height = event.physical_size
+                gloo.set_viewport(0, 0, width, height)
 
-    def on_draw(self, event):
-        gloo.clear('black')
-        if self.retina.verb: print("Sending request")
-        if time.time()-self.start < self.retina.model['T_SIM']: # + ret.sleep_time*2: 
-            self.retina.socket.send (b"Hello")
-        else:
-            sys.exit()
-        data = self.retina.recv_array(self.retina.socket)
-        if self.retina.verb: 
-            print("Received reply ", data.shape, data.min(), data.max())
-        image = self.retina.decode(data)
-        self.program['texture'][...] = (image*128).astype(np.uint8)
-        self.program.draw('triangle_strip')
-
-
-    def on_timer(self, event):
-        self.update()
+            def on_draw(self, event):
+                gloo.clear('black')
+                if self.retina.verb: print("Sending request")
+                if time.time()-self.start < self.retina.model['T_SIM']: # + ret.sleep_time*2: 
+                    self.retina.socket.send (b"Hello")
+                else:
+                    sys.exit()
+                data = self.retina.recv_array(self.retina.socket)
+                if self.retina.verb: 
+                    print("Received reply ", data.shape, data.min(), data.max())
+                image = self.retina.decode(data)
+                self.program['texture'][...] = (image*128).astype(np.uint8)
+                self.program.draw('triangle_strip')
 
 
-if __name__ == '__main__':
-    c = Canvas()
-    app.run()
-    c.cap.release()
+            def on_timer(self, event):
+                self.update()
 
+
+        if __name__ == '__main__':
+            c = Canvas()
+            app.run()
+            c.cap.release()
+    except :
+        pass
