@@ -29,10 +29,10 @@ class PhotoReceptor:
 
             self.rpi = True
 
-            with picamera.PiCamera() as camera:
-                camera.start_preview()
-                with picamera.array.PiRGBArray(camera) as self.stream:
-                    cap = camera.capture(self.stream, format='rgb')
+            with picamera.PiCamera() as self.camera:
+                self.camera.start_preview()
+                with picamera.array.PiRGBArray(self.camera) as self.stream:
+                    self.camera.capture(self.stream, format='rgb')
 
         except:
             #On other Unix System
@@ -52,7 +52,6 @@ class PhotoReceptor:
 
             except:
                 print('Unable to capture video')
-
         #-------------------------------#
 
 
@@ -87,7 +86,7 @@ class PhotoReceptor:
 
     def close(self):
         if self.rpi :
-            camera.stop_preview()
+            self.camera.stop_preview()
         else :
             self.cap.release()
 
