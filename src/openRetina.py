@@ -29,10 +29,11 @@ class PhotoReceptor:
 
             self.rpi = True
 
-            with picamera.PiCamera() as self.camera:
-                self.camera.start_preview()
-                with picamera.array.PiRGBArray(self.camera) as self.stream:
-                    self.camera.capture(self.stream, format='rgb')
+            self.camera = picamera.PiCamera()
+            self.camera.start_preview()
+
+            with picamera.array.PiRGBArray(self.camera) as self.stream:
+                self.camera.capture(self.stream, format='rgb')
 
         except:
             #On other Unix System
