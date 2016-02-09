@@ -16,7 +16,7 @@ Installation
 ------------
 
 ``
-	pip install git+https://meduz.github.com/openRetina
+	pip3 install git+https://meduz.github.com/openRetina
 ``
 
 Do not forget to setup the IP address of your RPi on the network.
