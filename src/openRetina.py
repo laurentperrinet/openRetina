@@ -64,7 +64,7 @@ class PhotoReceptor:
             frame = self.stream.array
         else:
             ret, frame_bgr = self.cap.read()
-            frame = frame_bgr[:, :, ::-1]
+            frame = frame_bgr[:, :, ::-1]     #BGR to RGB
         return frame
 
     def close(self):
