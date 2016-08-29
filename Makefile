@@ -13,20 +13,21 @@ pypi_tags:
 	git push --tags origin master
 
 pypi_push:
-	python setup.py register
+	python3 setup.py register
 
 pypi_upload:
-	python setup.py sdist upload
+	python3 setup.py sdist upload
 
 pypi_docs:
 	#rm web.zip index.html
-	#ipython nbconvert --to html $(NAME).ipynb
+	#ipython3 nbconvert --to html $(NAME).ipynb
 	#mv $(NAME).html index.html
 	#runipy $(NAME).ipynb  --html  index.html
 	zip web.zip index.html
 	open https://pypi.python.org/pypi?action=pkg_edit&name=$NAME
 
 install_dev:
+	pip uninstall -y $(NAME) ; pip install -e .
 	pip3 uninstall -y $(NAME) ; pip3 install -e .
 
 todo:

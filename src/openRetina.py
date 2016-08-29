@@ -19,7 +19,7 @@ from multiprocessing.pool import ThreadPool
 from collections import deque
 
 class PhotoReceptor:
-    def __init__(self, cam_id=0, DOWNSCALE=1, verbose=True):
+    def __init__(self, cam_id=-1, DOWNSCALE=1, verbose=True):
 
         #----Which camera handler?----
         try:
