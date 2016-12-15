@@ -10,7 +10,10 @@ import io
 import struct
 import array
 import numpy as np
-import cv2
+try:
+    import cv2
+except:
+    pass
 import zmq
 import time
 import sys
@@ -126,11 +129,12 @@ class openRetina(object):
             cap = cv2.VideoCapture(0)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
+
         elif 'picamera' in self.model['input'] :
             import picamera
             cap = picamera.PiCamera()
-            camera.resolution = (self.w, self.h)
-            camera.framerate = self.fps
+            cap.resolution = (self.w, self.h)
+            cap.framerate = self.fps
             time.sleep(self.sleep_time)
 
         if 'stream' in self.model['output'] :
@@ -140,12 +144,11 @@ class openRetina(object):
             if self.verb: print("Running retina on port: ", self.model['port'])
 
         if 'picamera' in self.model['input'] or  'opencv' in self.model['input'] :
-
             count = 0
             start = time.time()
             if 'picamera' in self.model['input'] :
                 stream = io.BytesIO()
-                for foo in camera.capture_continuous(stream, 'bgr', use_video_port=True):
+                for foo in cap.capture_continuous(stream, 'bgr', use_video_port=True):
                     self.code(stream, connection)
                     # If we've been capturing for more than 30 seconds, quit
                     if message == b'RIP': 
