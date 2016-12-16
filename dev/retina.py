@@ -1,3 +1,12 @@
+# -*- coding: utf8 -*-
+from __future__ import division, print_function
+"""
+openRetina : a retina
+
+See https://github.com/laurentperrinet/openRetina
+
+"""
+__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
 import io
 import socket
 import struct

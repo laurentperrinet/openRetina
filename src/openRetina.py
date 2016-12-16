@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 
-Base class for the openRetina 
+Base class for the openRetina
 
 
 """
@@ -10,10 +10,6 @@ import io
 import struct
 import array
 import numpy as np
-try:
-    import cv2
-except:
-    pass
 import zmq
 import time
 import sys
@@ -46,6 +42,7 @@ class PhotoReceptor:
             self.rpi = False
 
             try:
+                import cv2
                 self.cap = cv2.VideoCapture(cam_id)
                 if not self.cap.isOpened(): toto
 
@@ -97,7 +94,7 @@ class openRetina(object):
         self.fps = 90
         self.led = False
         self.n_cores = 4
-        
+
         if not 'ip' in self.model.keys(): self.model['ip']='localhost'
         if not 'port' in self.model.keys(): self.model['port']='5566'
         self.verb = verb
@@ -107,7 +104,7 @@ class openRetina(object):
         if not 'T_SIM' in self.model.keys(): self.model['T_SIM'] = 2 # in seconds
         self.refill_time = 0.1 # in seconds
 
-        # displaing options (server side)
+        # displaying options (server side)
         self.do_fs = True
         self.do_fs = False
         self.capture = False
@@ -151,7 +148,7 @@ class openRetina(object):
                 for foo in cap.capture_continuous(stream, 'bgr', use_video_port=True):
                     self.code(stream, connection)
                     # If we've been capturing for more than 30 seconds, quit
-                    if message == b'RIP': 
+                    if message == b'RIP':
                         finish = time.time()
                         break
                     # Reset the stream for the next capture
@@ -165,13 +162,13 @@ class openRetina(object):
                     # Wait for next request from client
                     message = self.socket.recv()
                     if self.verb: print("Received request %s" % message)
-                    if message == b'RIP': 
+                    if message == b'RIP':
                         finish = time.time()
                         break
                     # grab a frame
                     returned, cam_data = cap.read()
                     data = self.code(cam_data.reshape((self.h, self.w, 3)))
-                    # stream it 
+                    # stream it
                     self.send_array(self.socket, data)
                     count += 1
 
@@ -180,7 +177,7 @@ class openRetina(object):
                     # Wait for next request from client
                     message = self.socket.recv()
                     if self.verb: print("Received request %s" % message)
-                    if message == b'RIP': 
+                    if message == b'RIP':
                         finish = time.time()
                         break
                     data = np.random.randint(0, high=128, size=(self.w, self.h, 3))
@@ -230,7 +227,7 @@ class openRetina(object):
         image = image.astype(np.float)
         image = image.sum(axis=-1)
         image /= image.std()
-        dimage = image - self.image_old 
+        dimage = image - self.image_old
         data[:, :, 0] = dimage > dimage.mean() + dimage.std()
         data[:, :, -1] = dimage < dimage.mean() - dimage.std()
         self.image_old = image
@@ -259,9 +256,9 @@ class openRetina(object):
         image = data.copy()
         # normalize
         print("Image  ", image.shape, image.min(), image.max())
-        
+
         return image
-#         
+#
 #         # Read the length of the image as a 32-bit unsigned int. If the
 #         # length is zero, quit the loop
 #         image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
@@ -295,76 +292,76 @@ class openRetina(object):
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
 
-    try : 
-        from vispy import app
-        from vispy import gloo
+    # if True :
+from vispy import app
+from vispy import gloo
 
-        vertex = """
-            attribute vec2 position;
-            attribute vec2 texcoord;
-            varying vec2 v_texcoord;
-            void main()
-            {
-                gl_Position = vec4(position, 0.0, 1.0);
-                v_texcoord = texcoord;
-            }
-        """
+vertex = """
+    attribute vec2 position;
+    attribute vec2 texcoord;
+    varying vec2 v_texcoord;
+    void main()
+    {
+        gl_Position = vec4(position, 0.0, 1.0);
+        v_texcoord = texcoord;
+    }
+"""
 
-        fragment = """
-            uniform sampler2D texture;
-            varying vec2 v_texcoord;
-            void main()
-            {
-                gl_FragColor = texture2D(texture, v_texcoord);
+fragment = """
+    uniform sampler2D texture;
+    varying vec2 v_texcoord;
+    void main()
+    {
+        gl_FragColor = texture2D(texture, v_texcoord);
 
-                // HACK: the image is in BGR instead of RGB.
-                float temp = gl_FragColor.r;
-                gl_FragColor.r = gl_FragColor.b;
-                gl_FragColor.b = temp;
-            }
-        """
+        // HACK: the image is in BGR instead of RGB.
+        float temp = gl_FragColor.r;
+        gl_FragColor.r = gl_FragColor.b;
+        gl_FragColor.b = temp;
+    }
+"""
 
-        class Canvas(app.Canvas):
-            def __init__(self, retina):
-                app.use_app('pyglet')
-                self.retina = retina
-                app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
-                self.program = gloo.Program(vertex, fragment, count=4)
-                self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
-                self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
-                self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
-                width, height = self.physical_size
-                gloo.set_viewport(0, 0, width, height)
-                self._timer = app.Timer('auto', connect=self.on_timer, start=True)
-                self.start = time.time()
-                self.show()
+class Canvas(app.Canvas):
+    def __init__(self, retina):
+        app.use_app('pyglet')
+        self.retina = retina
+        app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
+        self.program = gloo.Program(vertex, fragment, count=4)
+        self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
+        self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
+        self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
+        width, height = self.physical_size
+        gloo.set_viewport(0, 0, width, height)
+        self._timer = app.Timer('auto', connect=self.on_timer, start=True)
+        self.start = time.time()
+        self.show()
 
-            def on_resize(self, event):
-                width, height = event.physical_size
-                gloo.set_viewport(0, 0, width, height)
+    def on_resize(self, event):
+        width, height = event.physical_size
+        gloo.set_viewport(0, 0, width, height)
 
-            def on_draw(self, event):
-                gloo.clear('black')
-                if self.retina.verb: print("Sending request")
-                if time.time()-self.start < self.retina.model['T_SIM']: # + ret.sleep_time*2: 
-                    self.retina.socket.send (b"Hello")
-                else:
-                    sys.exit()
-                data = self.retina.recv_array(self.retina.socket)
-                if self.retina.verb: 
-                    print("Received reply ", data.shape, data.min(), data.max())
-                image = self.retina.decode(data)
-                self.program['texture'][...] = (image*128).astype(np.uint8)
-                self.program.draw('triangle_strip')
-
-
-            def on_timer(self, event):
-                self.update()
+    def on_draw(self, event):
+        gloo.clear('black')
+        if self.retina.verb: print("Sending request")
+        if time.time()-self.start < self.retina.model['T_SIM']: # + ret.sleep_time*2:
+            self.retina.socket.send (b"Hello")
+        else:
+            sys.exit()
+        data = self.retina.recv_array(self.retina.socket)
+        if self.retina.verb:
+            print("Received reply ", data.shape, data.min(), data.max())
+        image = self.retina.decode(data)
+        self.program['texture'][...] = (image*128).astype(np.uint8)
+        self.program.draw('triangle_strip')
 
 
-        if __name__ == '__main__':
-            c = Canvas()
-            app.run()
-            c.cap.release()
-    except :
-        pass
+    def on_timer(self, event):
+        self.update()
+
+
+if __name__ == '__main__':
+    c = Canvas()
+    app.run()
+    c.cap.release()
+    # except :
+    #     pass
