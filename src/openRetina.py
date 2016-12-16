@@ -144,9 +144,8 @@ class openRetina(object):
         self.h = (self.h + 15) // 16 * 16
 
     def run(self):
-
+        count = 0
         if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
-            count = 0
             start = time.time()
             if self.camera.rpi : #'picamera' in self.model['input'] :
                 stream = io.BytesIO()
@@ -185,7 +184,7 @@ class openRetina(object):
                 if message == b'RIP':
                     finish = time.time()
                     break
-                data = np.random.randint(0, high=128, size=(self.w, self.h, 3))
+                data = np.random.randint(0, high=255, size=(self.w, self.h, 3))
                 # Reset the stream for the next capture
                 self.send_array(self.socket, data)
                 count += 1
@@ -223,7 +222,7 @@ class openRetina(object):
 
     def request_frame(self):
         if self.verb: print("Sending request")
-        self.socket.send (b"Hello")
+        self.socket.send (b"REQ")
         return self.recv_array(self.socket)
 
     def code(self, image):#stream, connection):
@@ -245,9 +244,7 @@ class openRetina(object):
         image = data.copy()
         # normalize
         print("Image  ", image.shape, image.min(), image.max())
-
         return image
-
 
     # https://zeromq.github.io/pyzmq/serialization.html
     def send_array(self, socket, A, flags=0, copy=True, track=False):
@@ -263,7 +260,6 @@ class openRetina(object):
         """recv a numpy array"""
         md = socket.recv_json(flags=flags)
         msg = socket.recv(flags=flags, copy=copy, track=track)
-#         buf = buffer(msg)
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
 
@@ -318,8 +314,7 @@ try :
         def on_draw(self, event):
             gloo.clear('black')
             if time.time()-self.start > self.retina.model['T_SIM']: sys.exit()
-            data = self.retina.request_frame()
-            image = self.retina.decode(data)
+            image = self.retina.decode(self.retina.request_frame())
             self.program['texture'][...] = (image*128).astype(np.uint8)
             self.program.draw('triangle_strip')
 

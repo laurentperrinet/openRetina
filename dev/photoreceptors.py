@@ -11,7 +11,7 @@ __author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
 
 from openRetina import openRetina
 phrs = openRetina(model=dict(layer='phrs', # label for this layer
-                             input=['camera'], # input: can be the camera, noise, a movie (TODO)
-                             output=['stream', 'capture'] # output: can be stream, display, ...
+                             input=['noise'], # input: can be the camera, noise, a movie (TODO)
+                             output=['stream'] # output: can be stream, display, ...
                              ))
 phrs.run()

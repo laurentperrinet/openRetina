@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 from __future__ import division, print_function
 """
-openRetina : a photoreceptor layer
+openRetina : a basic thalamic layer
 
 See https://github.com/laurentperrinet/openRetina
 
