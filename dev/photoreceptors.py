@@ -9,5 +9,8 @@ See https://github.com/laurentperrinet/openRetina
 __author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
 
 from openRetina import openRetina
-phrs = openRetina(model=dict(layer='phrs', input=['opencv'], output=['stream']))
+phrs = openRetina(model=dict(layer='phrs',
+                             input=['camera'], # input: can be the camera, noise, a movie (TODO)
+                             output=['stream', 'capture'] # output: can be stream, display, ...
+                             ))
 phrs.run()

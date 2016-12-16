@@ -1,11 +1,14 @@
 #! /usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- coding: utf8 -*-
+from __future__ import division, print_function
 """
 
 Base class for the openRetina
 
+See https://github.com/laurentperrinet/openRetina
 
 """
+__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
 import io
 import struct
 import array
@@ -18,7 +21,18 @@ from multiprocessing.pool import ThreadPool
 from collections import deque
 
 class PhotoReceptor:
-    def __init__(self, cam_id=-1, DOWNSCALE=1, verbose=True):
+    """
+
+    Base class for the input to the openRetina
+
+    """
+    def __init__(self, w, h, cam_id=-1, DOWNSCALE=1, verbose=True):
+        self.sleep_time = 2 # let the camera warm up for like 2 seconds
+        self.w, self.h = w, h
+
+
+        self.fps = 90
+        self.led = False
 
         #----Which camera handler?----
         try:
@@ -28,14 +42,18 @@ class PhotoReceptor:
 
             self.rpi = True
 
-            self.camera = picamera.PiCamera(cam_id)
-            self.camera.start_preview()
+            self.cap = picamera.PiCamera(cam_id)
+            self.cap.start_preview()
 
             if DOWNSCALE > 1:
                 if verbose: print( 'DOWNSCALE NOT IMPLEMENTED YET on the π' )
 
-            with picamera.array.PiRGBArray(self.camera) as self.stream:
-                self.camera.capture(self.stream, format='rgb')
+            self.cap.resolution = (self.w, self.h)
+            self.cap.framerate = self.fps
+            time.sleep(self.sleep_time)
+
+            with picamera.array.PiRGBArray(self.cap) as self.stream:
+                self.cap.capture(self.stream, format='rgb')
 
         except:
             #On other Unix System
@@ -46,6 +64,9 @@ class PhotoReceptor:
                 self.cap = cv2.VideoCapture(cam_id)
                 if not self.cap.isOpened(): toto
 
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
+
                 self.DOWNSCALE = DOWNSCALE
                 if DOWNSCALE > 1:
                     W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -53,10 +74,13 @@ class PhotoReceptor:
                     self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
                     self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
                 self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                if verbose: print('Using OpenCV')
 
             except:
                 if verbose: print('Unable to capture video')
-        #-------------------------------#
+    #-------------------------------#
+
+
 
     def grab(self):
         if self.rpi:
@@ -80,19 +104,14 @@ class openRetina(object):
                  model,
                  verb = True,
             ):
-        self.model = model
         self.w, self.h = 1920,1080
         self.w, self.h = 640, 480
         self.w, self.h = 320, 240
         self.w, self.h = 1280, 720
         self.w, self.h = 160, 128
-
-        self.image_old = np.zeros((self.h, self.w))
-
         # adjust resolution on the rpi
         self.raw_resolution()
-        self.fps = 90
-        self.led = False
+        self.model = model
         self.n_cores = 4
 
         if not 'ip' in self.model.keys(): self.model['ip']='localhost'
@@ -100,7 +119,6 @@ class openRetina(object):
         self.verb = verb
 
         # simulation time
-        self.sleep_time = 2 # let the camera warm up for like 2 seconds
         if not 'T_SIM' in self.model.keys(): self.model['T_SIM'] = 2 # in seconds
         self.refill_time = 0.1 # in seconds
 
@@ -109,7 +127,7 @@ class openRetina(object):
         self.do_fs = False
         self.capture = False
         self.capture = True
-
+        self.image_old = np.zeros((self.h, self.w))
     def raw_resolution(self):
         """
         Round a (width, height) tuple up to the nearest multiple of 32 horizontally
@@ -119,20 +137,24 @@ class openRetina(object):
         self.w = (self.w + 31) // 32 * 32
         self.h = (self.h + 15) // 16 * 16
 
+
     def run(self):
 
-        if 'opencv' in self.model['input'] :
-            import cv2
-            cap = cv2.VideoCapture(0)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
+        if 'camera' in self.model['input'] :
+            self.camera = PhotoReceptor(self.w, self.h)
 
-        elif 'picamera' in self.model['input'] :
-            import picamera
-            cap = picamera.PiCamera()
-            cap.resolution = (self.w, self.h)
-            cap.framerate = self.fps
-            time.sleep(self.sleep_time)
+        # if 'opencv' in self.model['input'] :
+        #     import cv2
+        #     cap = cv2.VideoCapture(0)
+        #     cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
+        #     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
+        #
+        # elif 'picamera' in self.model['input'] :
+        #     import picamera
+        #     cap = picamera.PiCamera()
+        #     cap.resolution = (self.w, self.h)
+        #     cap.framerate = self.fps
+        #     time.sleep(self.sleep_time)
 
         if 'stream' in self.model['output'] :
             context = zmq.Context()
@@ -140,12 +162,12 @@ class openRetina(object):
             self.socket.bind("tcp://*:%s" % self.model['port'])
             if self.verb: print("Running retina on port: ", self.model['port'])
 
-        if 'picamera' in self.model['input'] or  'opencv' in self.model['input'] :
+        if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
             count = 0
             start = time.time()
-            if 'picamera' in self.model['input'] :
+            if self.camera.rpi : #'picamera' in self.model['input'] :
                 stream = io.BytesIO()
-                for foo in cap.capture_continuous(stream, 'bgr', use_video_port=True):
+                for foo in self.camera.cap.capture_continuous(stream, 'bgr', use_video_port=True):
                     self.code(stream, connection)
                     # If we've been capturing for more than 30 seconds, quit
                     if message == b'RIP':
@@ -157,7 +179,7 @@ class openRetina(object):
                     count += 1
                 # Write a length of zero to the stream to signal we're done
                 connection.write(struct.pack('<L', 0))
-            if 'opencv' in self.model['input'] :
+            else: #if 'opencv' in self.model['input'] :
                 while True:
                     # Wait for next request from client
                     message = self.socket.recv()
@@ -166,29 +188,26 @@ class openRetina(object):
                         finish = time.time()
                         break
                     # grab a frame
-                    returned, cam_data = cap.read()
+                    returned, cam_data = self.camera.cap.read()
                     data = self.code(cam_data.reshape((self.h, self.w, 3)))
                     # stream it
                     self.send_array(self.socket, data)
                     count += 1
 
-            if 'noise' in self.model['input'] :
-                while True:
-                    # Wait for next request from client
-                    message = self.socket.recv()
-                    if self.verb: print("Received request %s" % message)
-                    if message == b'RIP':
-                        finish = time.time()
-                        break
-                    data = np.random.randint(0, high=128, size=(self.w, self.h, 3))
-                    # Reset the stream for the next capture
-                    self.send_array(self.socket, data)
-                    count += 1
-            print('Sent %d images in %d seconds at %.2ffps' % (
-                    count, finish-start, count / (finish-start)))
-            self.socket.close()
+        elif 'noise' in self.model['input'] :
+            while True:
+                # Wait for next request from client
+                message = self.socket.recv()
+                if self.verb: print("Received request %s" % message)
+                if message == b'RIP':
+                    finish = time.time()
+                    break
+                data = np.random.randint(0, high=128, size=(self.w, self.h, 3))
+                # Reset the stream for the next capture
+                self.send_array(self.socket, data)
+                count += 1
 
-        if 'stream' in self.model['input'] :
+        elif 'stream' in self.model['input'] :
             context = zmq.Context()
             if self.verb: print("Connecting to retina with port %s" % self.model['port'])
             self.socket = context.socket(zmq.REQ)
@@ -217,6 +236,9 @@ class openRetina(object):
             finally:
                 self.socket.send (b"RIP")
                 self.socket.close()
+        # print('Sent %d images in %d seconds at %.2ffps' % (
+        #         count, finish-start, count / (finish-start)))
+        self.socket.close()
 
     def code(self, image):#stream, connection):
 #         data = image.copy()
