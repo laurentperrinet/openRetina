@@ -28,11 +28,20 @@ The opanRetina library needs some dependencies to run:
 
 - ``numpy`` (http://numpy.scipy.org/),
 - ``zeromq`` (http://zeromq.org/),
-- ``glumpy`` is dedicated to numpy visualization, 
+- ``vispy`` is dedicated to numpy visualization, 
 - You will also need ``IPython`` (http://ipython.scipy.org/) for running interactive sessions
 - Some demos require ``matplotlib`` (http://matplotlib.org/) and ``scipy`` (http://www.scipy.org/) as well but this is optional.
 
 on the client, if you use a raspberry pi, you should need to only setup ``picamera`` (and its dependencies) and on a local machine, you should need ``opencv`` (to grab images from the webcam) or ``imageio`` to read local video files.
+
+Use
+
+``
+    sudo apt-get install python3-picamera
+
+``
+
+
 
 Example usage
 -------------
