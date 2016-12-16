@@ -214,7 +214,7 @@ class openRetina(object):
                 if 'capture' in self.model['output'] :
                     import imageio
                     print(self.decode(self.request_frame()).mean())
-                    imageio.imwrite('capture.png', 1.*self.decode(self.request_frame()))
+                    imageio.imwrite('capture.png', np.fliplr(255*self.decode(self.request_frame())))
                 self.socket.send (b"RIP")
                 self.socket.close()
         # print('Sent %d images in %d seconds at %.2ffps' % (
