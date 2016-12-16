@@ -80,8 +80,6 @@ class PhotoReceptor:
                 if verbose: print('Unable to capture video')
     #-------------------------------#
 
-
-
     def grab(self):
         if self.rpi:
             # At this point the image is available as stream.array
@@ -125,9 +123,17 @@ class openRetina(object):
         # displaying options (server side)
         self.do_fs = True
         self.do_fs = False
-        self.capture = False
-        self.capture = True
         self.image_old = np.zeros((self.h, self.w))
+
+        if 'camera' in self.model['input'] :
+            self.camera = PhotoReceptor(self.w, self.h)
+
+        if 'stream' in self.model['output'] :
+            context = zmq.Context()
+            self.socket = context.socket(zmq.REP)
+            self.socket.bind("tcp://*:%s" % self.model['port'])
+            if self.verb: print("Running retina on port: ", self.model['port'])
+
     def raw_resolution(self):
         """
         Round a (width, height) tuple up to the nearest multiple of 32 horizontally
@@ -137,30 +143,7 @@ class openRetina(object):
         self.w = (self.w + 31) // 32 * 32
         self.h = (self.h + 15) // 16 * 16
 
-
     def run(self):
-
-        if 'camera' in self.model['input'] :
-            self.camera = PhotoReceptor(self.w, self.h)
-
-        # if 'opencv' in self.model['input'] :
-        #     import cv2
-        #     cap = cv2.VideoCapture(0)
-        #     cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
-        #     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
-        #
-        # elif 'picamera' in self.model['input'] :
-        #     import picamera
-        #     cap = picamera.PiCamera()
-        #     cap.resolution = (self.w, self.h)
-        #     cap.framerate = self.fps
-        #     time.sleep(self.sleep_time)
-
-        if 'stream' in self.model['output'] :
-            context = zmq.Context()
-            self.socket = context.socket(zmq.REP)
-            self.socket.bind("tcp://*:%s" % self.model['port'])
-            if self.verb: print("Running retina on port: ", self.model['port'])
 
         if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
             count = 0
@@ -224,21 +207,23 @@ class openRetina(object):
                 else:
                     print('headless mode')
                     while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
-                        if self.verb: print("Sending request")
-                        self.socket.send (b"Hello")
-                        data = self.recv_array(self.socket)
+                        data = self.request_frame()
                         if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
                         t0 = time.time()
-
-                    if 'capture' in self.model['output'] :
-                        import imageio
-                        imageio.imwrite('capture.png', data)
             finally:
+                if 'capture' in self.model['output'] :
+                    import imageio
+                    imageio.imwrite('capture.png', self.decode(self.request_frame()))
                 self.socket.send (b"RIP")
                 self.socket.close()
         # print('Sent %d images in %d seconds at %.2ffps' % (
         #         count, finish-start, count / (finish-start)))
         self.socket.close()
+
+    def request_frame(self):
+        if self.verb: print("Sending request")
+        self.socket.send (b"Hello")
+        return self.recv_array(self.socket)
 
     def code(self, image):#stream, connection):
 #         data = image.copy()
@@ -254,25 +239,6 @@ class openRetina(object):
         data[:, :, -1] = dimage < dimage.mean() - dimage.std()
         self.image_old = image
         return data
-        # Read the image and do some processing on it
-#         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
-# #         # "Decode" the image from the array, preserving colour
-# #         image = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-# # #         image = cv2.cvtColor(image, cv2.cv.CV_BGR2GRAY)
-# #         r, image = cv2.threshold(image, 127, 255, 1)
-#          # Construct a numpy array from the stream
-# #                             data = np.frombuffer(self.stream.getvalue(), dtype=np.uint8).reshape((ret.h, ret.w, 3))
-# #                             data = np.fromstring(self.stream.getvalue(), dtype=np.uint8)
-#         print('before', data.min(), data.max())
-#         data = 255 - data
-#         print(data.min(), data.max())
-#         stream.seek(0)
-#         stream.write(array.array('B', data.ravel().tolist()).tostring())
-#         # write the length of the stream and send it
-#         connection.write(struct.pack('<L', stream.tell()))
-#         connection.flush()
-#         stream.seek(0)
-#         connection.write(stream.read())
 
     def decode(self, data):
         image = data.copy()
@@ -280,21 +246,7 @@ class openRetina(object):
         print("Image  ", image.shape, image.min(), image.max())
 
         return image
-#
-#         # Read the length of the image as a 32-bit unsigned int. If the
-#         # length is zero, quit the loop
-#         image_len = struct.unpack('<L', connection.read(struct.calcsize('<L')))[0]
-# #             if not image_len:
-# #                 break
-#         # Construct a stream to hold the image data and read the image
-#         # data from the connection
-#         image_stream = io.BytesIO()
-#         image_stream.write(connection.read(image_len))
-#         # Rewind the stream, open it as an image with PIL and do some
-#         # processing on it
-#         image_stream.seek(0)
-#         data = np.fromstring(image_stream.getvalue(), dtype=np.uint8).reshape(self.h, self.w, 3)
-#         return data
+
 
     # https://zeromq.github.io/pyzmq/serialization.html
     def send_array(self, socket, A, flags=0, copy=True, track=False):
@@ -314,76 +266,64 @@ class openRetina(object):
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
 
-    # if True :
-from vispy import app
-from vispy import gloo
+try :
+    from vispy import app
+    from vispy import gloo
 
-vertex = """
-    attribute vec2 position;
-    attribute vec2 texcoord;
-    varying vec2 v_texcoord;
-    void main()
-    {
-        gl_Position = vec4(position, 0.0, 1.0);
-        v_texcoord = texcoord;
-    }
-"""
+    vertex = """
+        attribute vec2 position;
+        attribute vec2 texcoord;
+        varying vec2 v_texcoord;
+        void main()
+        {
+            gl_Position = vec4(position, 0.0, 1.0);
+            v_texcoord = texcoord;
+        }
+    """
 
-fragment = """
-    uniform sampler2D texture;
-    varying vec2 v_texcoord;
-    void main()
-    {
-        gl_FragColor = texture2D(texture, v_texcoord);
+    fragment = """
+        uniform sampler2D texture;
+        varying vec2 v_texcoord;
+        void main()
+        {
+            gl_FragColor = texture2D(texture, v_texcoord);
 
-        // HACK: the image is in BGR instead of RGB.
-        float temp = gl_FragColor.r;
-        gl_FragColor.r = gl_FragColor.b;
-        gl_FragColor.b = temp;
-    }
-"""
+            // HACK: the image is in BGR instead of RGB.
+            float temp = gl_FragColor.r;
+            gl_FragColor.r = gl_FragColor.b;
+            gl_FragColor.b = temp;
+        }
+    """
 
-class Canvas(app.Canvas):
-    def __init__(self, retina):
-        app.use_app('pyglet')
-        self.retina = retina
-        app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
-        self.program = gloo.Program(vertex, fragment, count=4)
-        self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
-        self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
-        self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
-        width, height = self.physical_size
-        gloo.set_viewport(0, 0, width, height)
-        self._timer = app.Timer('auto', connect=self.on_timer, start=True)
-        self.start = time.time()
-        self.show()
+    class Canvas(app.Canvas):
+        def __init__(self, retina):
+            app.use_app('pyglet')
+            self.retina = retina
+            app.Canvas.__init__(self, keys='interactive', fullscreen=True, size=(1280, 960))#
+            self.program = gloo.Program(vertex, fragment, count=4)
+            self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
+            self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
+            self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
+            width, height = self.physical_size
+            gloo.set_viewport(0, 0, width, height)
+            self._timer = app.Timer('auto', connect=self.on_timer, start=True)
+            self.start = time.time()
+            self.show()
 
-    def on_resize(self, event):
-        width, height = event.physical_size
-        gloo.set_viewport(0, 0, width, height)
+        def on_resize(self, event):
+            width, height = event.physical_size
+            gloo.set_viewport(0, 0, width, height)
 
-    def on_draw(self, event):
-        gloo.clear('black')
-        if self.retina.verb: print("Sending request")
-        if time.time()-self.start < self.retina.model['T_SIM']: # + ret.sleep_time*2:
-            self.retina.socket.send (b"Hello")
-        else:
-            sys.exit()
-        data = self.retina.recv_array(self.retina.socket)
-        if self.retina.verb:
-            print("Received reply ", data.shape, data.min(), data.max())
-        image = self.retina.decode(data)
-        self.program['texture'][...] = (image*128).astype(np.uint8)
-        self.program.draw('triangle_strip')
+        def on_draw(self, event):
+            gloo.clear('black')
+            if time.time()-self.start > self.retina.model['T_SIM']: sys.exit()
+            data = self.retina.request_frame()
+            image = self.retina.decode(data)
+            self.program['texture'][...] = (image*128).astype(np.uint8)
+            self.program.draw('triangle_strip')
+            
+        def on_timer(self, event):
+            self.update()
 
-
-    def on_timer(self, event):
-        self.update()
-
-
-if __name__ == '__main__':
-    c = Canvas()
-    app.run()
-    c.cap.release()
-    # except :
-    #     pass
+except:
+    print('💀  Could not load visualisation')
