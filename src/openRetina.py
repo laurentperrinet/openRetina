@@ -213,7 +213,8 @@ class openRetina(object):
             finally:
                 if 'capture' in self.model['output'] :
                     import imageio
-                    imageio.imwrite('capture.png', self.decode(self.request_frame()))
+                    print(self.decode(self.request_frame()).mean())
+                    imageio.imwrite('capture.png', 1.*self.decode(self.request_frame()))
                 self.socket.send (b"RIP")
                 self.socket.close()
         # print('Sent %d images in %d seconds at %.2ffps' % (
@@ -321,7 +322,7 @@ try :
             image = self.retina.decode(data)
             self.program['texture'][...] = (image*128).astype(np.uint8)
             self.program.draw('triangle_strip')
-            
+
         def on_timer(self, event):
             self.update()
 
