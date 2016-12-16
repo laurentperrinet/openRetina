@@ -1,6 +1,12 @@
 
 import subprocess
-p = subprocess.Popen(['/usr/bin/python3', 'photoreceptors.py'])
+
+### For Raspberry pi
+#p = subprocess.Popen(['/usr/bin/python3', 'photoreceptors.py'])
+
+### On Mac OsX
+p = subprocess.Popen(['/usr/local/bin/python3', 'photoreceptors.py'])
+
 from openRetina import openRetina
 thalamus = openRetina(model=dict(layer='thalamus', 
     input=['stream'], output=['display', 'capture'], 
