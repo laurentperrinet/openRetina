@@ -105,8 +105,8 @@ class openRetina(object):
         self.w, self.h = 1920,1080
         self.w, self.h = 640, 480
         self.w, self.h = 320, 240
-        self.w, self.h = 1280, 720
-        self.w, self.h = 160, 128
+        #self.w, self.h = 1280, 720
+        #self.w, self.h = 160, 128
         # adjust resolution on the rpi
         self.raw_resolution()
         self.model = model

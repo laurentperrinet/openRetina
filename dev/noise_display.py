@@ -16,7 +16,7 @@ phrs = openRetina(model=dict(layer='test_noise', # label for this layer
                              output=['stream'] # output: can be stream, display, ...
                              ))
 
-thread_noise = multiprocessing.Process(target=phrs)
+thread_noise = multiprocessing.Process(target=phrs.run)
 thread_noise.start()
 
 
