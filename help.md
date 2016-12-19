@@ -10,7 +10,7 @@ Install openRetina libraries open python
 rm -fr  /usr/local/lib/python2.7/site-packages/openRetina-0.1-py2.7.egg
 
 2. Make sure you removed the /built and /dist folder in openRetina :
-rm -fr build dist 
+rm -fr build dist
 
 3. In the openRetina folder, where the setup.py file is located, execute :
-pip3 install -e . 
+pip3 install -e .

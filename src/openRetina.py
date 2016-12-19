@@ -20,17 +20,20 @@ import sys
 from multiprocessing.pool import ThreadPool
 from collections import deque
 
+
 class PhotoReceptor:
     """
 
     Base class for the input to the openRetina
 
     """
-    def __init__(self, w, h, cam_id=-1, DOWNSCALE=1, verbose=True):
+    def __init__(self, w, h, cam_id=0, DOWNSCALE=1, verbose=True):
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
-        self.w, self.h = w, h
-
-
+        #self.w, self.h = w, h
+        #print(self.w)
+        #print(self.h)
+        print(w)
+        print(h)
         self.fps = 90
         self.led = False
 
@@ -64,6 +67,7 @@ class PhotoReceptor:
                 self.cap = cv2.VideoCapture(cam_id)
                 if not self.cap.isOpened(): toto
 
+                print("dim1 : {0}, dim2 : {1}".format(self.h,self.w))
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
 
@@ -107,8 +111,20 @@ class openRetina(object):
         self.w, self.h = 320, 240
         #self.w, self.h = 1280, 720
         #self.w, self.h = 160, 128
+        #self.w, self.h = 1280, 720
+        #self.w, self.h = 160, 128
+        self.w, self.h = 1280, 720 # resolution ratio for macbook pro
         # adjust resolution on the rpi
         self.raw_resolution()
+        '''
+            model is a dict describing the model used
+            layer : thalamus,
+            input : ['stream','camera','noise']
+            output : ['display','capture','stream']
+            TSIM : in sec, the duration if the simulation
+            ip : ip of the photoreceptor (localhost if on the same machine)
+            port : 5566 by default
+        '''
         self.model = model
         self.n_cores = 4
 
@@ -171,7 +187,16 @@ class openRetina(object):
                         break
                     # grab a frame
                     returned, cam_data = self.camera.cap.read()
-                    data = self.code(cam_data.reshape((self.h, self.w, 3)))
+                    data=self.code(cam_data.reshape((self.h,self.w,3)))
+                    #print("output resolution {0}".format(cam_data.shape))
+                    #data=cam_data
+                    ##data = self.code(cam_data)
+                    #print("dim1 : {0}, dim2 : {1}".format(self.h,self.w))
+                    #print(data.shape)
+                    #self.code(cam_data.reshape((self.h, self.w, 3)))
+                    #print(type(self.code(cam_data.reshape((self.h, self.w, 3)))))
+                    ##print(cam_data.shape)
+                    ##print("dim1 : {0}, dim2 : {1}".format(self.h,self.w))
                     # stream it
                     self.send_array(self.socket, data)
                     count += 1
@@ -203,6 +228,7 @@ class openRetina(object):
                     from vispy import app
                     c = Canvas(self)
                     app.run()
+                    #disp=other_gui(self)
                 else:
                     print('headless mode')
                     while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
@@ -226,19 +252,19 @@ class openRetina(object):
         return self.recv_array(self.socket)
 
     def code(self, image):#stream, connection):
-#         data = image.copy()
+        #data = image.copy()
         # normalize
 #         data -= data.min()
 #         data /= data.max()
-        data = np.zeros_like(image)
-        image = image.astype(np.float)
-        image = image.sum(axis=-1)
-        image /= image.std()
-        dimage = image - self.image_old
-        data[:, :, 0] = dimage > dimage.mean() + dimage.std()
-        data[:, :, -1] = dimage < dimage.mean() - dimage.std()
-        self.image_old = image
-        return data
+        #data = np.zeros_like(image)
+        #image = image.astype(np.float)
+        #image = image.sum(axis=-1)
+        #image /= image.std()
+        #dimage = image - self.image_old
+        #data[:, :, 0] = dimage > dimage.mean() + dimage.std()
+        #data[:, :, -1] = dimage < dimage.mean() - dimage.std()
+        #self.image_old = image
+        return image
 
     def decode(self, data):
         image = data.copy()
@@ -262,6 +288,17 @@ class openRetina(object):
         msg = socket.recv(flags=flags, copy=copy, track=track)
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
+
+class other_gui(object):
+    def __init__(self, retina):
+        self.retina=retina
+
+    def displaying(self):
+        while (time.time()-self.start <= self.retina.model['T_SIM']):
+            image_to_display = self.retina.request_frame()
+            if image_to_diplay is not None:
+               cv2.imshow("preview", self.retina.request_frame())
+        sys.exit()
 
 try :
     from vispy import app
@@ -316,8 +353,8 @@ try :
             if time.time()-self.start > self.retina.model['T_SIM']: sys.exit()
             image = self.retina.decode(self.retina.request_frame())
             self.program['texture'][...] = (image*128).astype(np.uint8)
+            #self.program['texture'][...]=(data*128).astype(np.uint8)
             self.program.draw('triangle_strip')
-
         def on_timer(self, event):
             self.update()
 
