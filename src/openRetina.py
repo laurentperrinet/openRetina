@@ -112,8 +112,8 @@ class openRetina(object):
         #self.w, self.h = 1280, 720
         #self.w, self.h = 160, 128
         #self.w, self.h = 1280, 720
-        #self.w, self.h = 160, 128
-        self.w, self.h = 1280, 720 # resolution ratio for macbook pro
+        self.w, self.h = 1280, 720 # full resolution for macbook pro
+        self.w, self.h = 160, 128
         # adjust resolution on the rpi
         self.raw_resolution()
         '''

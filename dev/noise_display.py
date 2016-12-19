@@ -56,7 +56,7 @@ thalamus = openRetina(model=dict(layer='test_display', # label for this layer
 
 thalamus.run()
 
-thread1.join()
+# thread1.join()
 #thread2.join()
 
 print ("Exiting Main Thread")
