@@ -106,14 +106,14 @@ class openRetina(object):
                  model,
                  verb = True,
             ):
-        self.w, self.h = 1920,1080
-        self.w, self.h = 640, 480
-        self.w, self.h = 320, 240
+        #self.w, self.h = 1920,1080
+        #self.w, self.h = 640, 480
+        #self.w, self.h = 320, 240
         #self.w, self.h = 1280, 720
         #self.w, self.h = 160, 128
         #self.w, self.h = 1280, 720
         self.w, self.h = 1280, 720 # full resolution for macbook pro
-        self.w, self.h = 160, 128
+        #self.w, self.h = 160, 128
         # adjust resolution on the rpi
         self.raw_resolution()
         '''
@@ -256,15 +256,15 @@ class openRetina(object):
         # normalize
 #         data -= data.min()
 #         data /= data.max()
-        #data = np.zeros_like(image)
-        #image = image.astype(np.float)
-        #image = image.sum(axis=-1)
-        #image /= image.std()
-        #dimage = image - self.image_old
-        #data[:, :, 0] = dimage > dimage.mean() + dimage.std()
-        #data[:, :, -1] = dimage < dimage.mean() - dimage.std()
-        #self.image_old = image
-        return image
+        data = np.zeros_like(image)
+        image = image.astype(np.float)
+        image = image.sum(axis=-1)
+        image /= image.std()
+        dimage = image - self.image_old
+        data[:, :, 0] = dimage > dimage.mean() + dimage.std()
+        data[:, :, -1] = dimage < dimage.mean() - dimage.std()
+        self.image_old = image
+        return data
 
     def decode(self, data):
         image = data.copy()
