@@ -231,7 +231,8 @@ class openRetina(object):
                     #disp=other_gui(self)
                 else:
                     print('headless mode')
-                    while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
+                    #while time.time()-start < self.model['T_SIM'] + self.sleep_time_cam*2:
+                    while time.time()-start < self.model['T_SIM'] + 2*2:
                         data = self.request_frame()
                         if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
                         t0 = time.time()
