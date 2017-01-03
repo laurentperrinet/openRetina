@@ -14,7 +14,7 @@ p = subprocess.Popen(['./photoreceptors.py'])
 from openRetina import openRetina
 thalamus = openRetina(model=dict(layer='thalamus', # label for this layer
                              input=['stream'], # input: can be the camera, noise, a movie (TODO)
-                             output=['dislay','capture'],
-                             #output=['display'], # output: can be stream, display, capture,...
-                             T_SIM=120))
+                             output=['display','capture'],
+                             #output=['capture'], # output: can be stream, display, capture,...
+                             T_SIM=20))
 thalamus.run()
