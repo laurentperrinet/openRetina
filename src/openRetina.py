@@ -29,9 +29,7 @@ class PhotoReceptor:
     """
     def __init__(self, w, h, cam_id=0, DOWNSCALE=1, verbose=True):
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
-        #self.w, self.h = w, h
-        #print(self.w)
-        #print(self.h)
+        self.w, self.h = w, h
         print(w)
         print(h)
         self.fps = 90
