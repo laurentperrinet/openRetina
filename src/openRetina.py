@@ -164,7 +164,7 @@ class openRetina(object):
             if self.camera.rpi : #'picamera' in self.model['input'] :
                 stream = io.BytesIO()
                 for foo in self.camera.cap.capture_continuous(stream, 'bgr', use_video_port=True):
-                    self.code(stream, connection)
+                    self.code(stream)#, connection)
                     # If we've been capturing for more than 30 seconds, quit
                     if message == b'RIP':
                         finish = time.time()
