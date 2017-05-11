@@ -52,9 +52,10 @@ class PhotoReceptor:
             self.cap.resolution = (self.w, self.h)
             self.cap.framerate = self.fps
             time.sleep(self.sleep_time)
-
-            with picamera.array.PiRGBArray(self.cap) as self.stream:
-                self.cap.capture(self.stream, format='rgb')
+            self.output = np.empty((self.h, self.w, 3), dtype=np.uint8)
+            self.cap.capture(self.output, 'rgb')
+            #with picamera.array.PiRGBArray(self.cap) as self.stream:
+            #    self.cap.capture(self.stream, format='rgb')
 
         except ImportError:
             #On other Unix System
@@ -85,7 +86,8 @@ class PhotoReceptor:
     def grab(self):
         if self.rpi:
             # At this point the image is available as stream.array
-            frame = self.stream.array
+            #frame = self.stream.array
+            self.cap.capture(self.output, 'rgb')
         else:
             ret, frame_bgr = self.cap.read()
             frame = frame_bgr[:, :, ::-1]     #BGR to RGB
