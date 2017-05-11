@@ -197,27 +197,33 @@ class openRetina(object):
 
             t0 = time.time()
             start = time.time()
-            if True:#try:
-                if 'display' in self.model['output'] :
-                    from openRetina import Canvas
-                    from vispy import app
-                    c = Canvas(self)
-                    app.run()
-                    #disp=other_gui(self)
-                else:
-                    print('headless mode')
-                    #while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
-                    while time.time()-start < self.model['T_SIM'] + 2*2:
-                        data = self.request_frame()
-                        if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
-                        t0 = time.time()
-            if True:#finally:
-                if 'capture' in self.model['output'] :
-                    import imageio
-                    print(self.decode(self.request_frame()).mean())
-                    imageio.imwrite('capture.png', np.fliplr(255*self.decode(self.request_frame())))
-                self.socket.send (b"RIP")
-                self.socket.close()
+            while time.time()-start < self.model['T_SIM'] + 2*2:
+                data = self.request_frame()
+                if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
+                t0 = time.time()
+            self.socket.send (b'RIP')
+            self.socket.close()
+            # if True:#try:
+            #     if 'display' in self.model['output'] :
+            #         from openRetina import Canvas
+            #         from vispy import app
+            #         c = Canvas(self)
+            #         app.run()
+            #         #disp=other_gui(self)
+            #     else:
+            #         print('headless mode')
+            #         #while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
+            #         while time.time()-start < self.model['T_SIM'] + 2*2:
+            #             data = self.request_frame()
+            #             if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
+            #             t0 = time.time()
+            # if True:#finally:
+            #     if 'capture' in self.model['output'] :
+            #         import imageio
+            #         print(self.decode(self.request_frame()).mean())
+            #         imageio.imwrite('capture.png', np.fliplr(255*self.decode(self.request_frame())))
+            #     self.socket.send (b'RIP')
+            #     self.socket.close()
         # print('Sent %d images in %d seconds at %.2ffps' % (
         #         count, finish-start, count / (finish-start)))
         self.socket.close()
