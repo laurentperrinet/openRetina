@@ -6,7 +6,7 @@ openRetina : a basic thalamic layer
 See https://github.com/laurentperrinet/openRetina
 
 """
-__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
+__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 
 import subprocess
 p = subprocess.Popen(['./photoreceptors.py'])

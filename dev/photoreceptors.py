@@ -7,7 +7,7 @@ openRetina : a photoreceptor layer
 See https://github.com/laurentperrinet/openRetina
 
 """
-__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
+__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 
 from openRetina import openRetina
 phrs = openRetina(model=dict(layer='phrs', # label for this layer

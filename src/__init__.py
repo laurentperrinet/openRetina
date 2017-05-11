@@ -8,9 +8,9 @@ Base class for the openRetina
 See https://github.com/laurentperrinet/openRetina
 
 """
-__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
-# from .openRetina import *
-from .GCB import *
-from .VisionSensor import *
-from .Monitor import *
-from .DoG import *
+__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
+from .openRetina import *
+# from .GCB import *
+# from .VisionSensor import *
+# from .Monitor import *
+# from .DoG import *

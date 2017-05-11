@@ -8,7 +8,7 @@ Base class for the openRetina
 See https://github.com/laurentperrinet/openRetina
 
 """
-__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
+__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 import io
 import struct
 import array
@@ -185,7 +185,7 @@ class openRetina(object):
                         break
                     # grab a frame
                     returned, cam_data = self.camera.cap.read()
-                    data=self.code(cam_data.reshape((self.h,self.w,3)))
+                    data = self.code(cam_data.reshape((self.h, self.w, 3)))
                     #print("output resolution {0}".format(cam_data.shape))
                     #data=cam_data
                     ##data = self.code(cam_data)
@@ -222,7 +222,6 @@ class openRetina(object):
             start = time.time()
             try:
                 if 'display' in self.model['output'] :
-                    print('toto')
                     from openRetina import Canvas
                     from vispy import app
                     c = Canvas(self)

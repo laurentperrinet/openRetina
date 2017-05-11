@@ -6,7 +6,7 @@ openRetina : a retina
 See https://github.com/laurentperrinet/openRetina
 
 """
-__author__ = "(c) Victor Boutin & Laurent Perrinet INT - CNRS"
+__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 import io
 import socket
 import struct
