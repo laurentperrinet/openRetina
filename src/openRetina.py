@@ -170,9 +170,10 @@ class openRetina(object):
                     break
                 # grab a frame
                 cam_data = self.camera.grab()
-                print("output resolution {0}".format(cam_data.shape))
-                data = self.code(cam_data.reshape((self.h, self.w, 3)))
-                print("output resolution {0}".format(cam_data.shape))
+                # print("output resolution {0}".format(cam_data.shape))
+                # data = self.code(cam_data.reshape((self.h, self.w, 3)))
+                # print("output resolution {0}".format(cam_data.shape))
+                data = self.code(cam_data)
                 self.send_array(self.socket, data)
                 count += 1
         elif 'noise' in self.model['input'] :
@@ -196,7 +197,7 @@ class openRetina(object):
 
             t0 = time.time()
             start = time.time()
-            try:
+            if True:#try:
                 if 'display' in self.model['output'] :
                     from openRetina import Canvas
                     from vispy import app
@@ -210,7 +211,7 @@ class openRetina(object):
                         data = self.request_frame()
                         if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
                         t0 = time.time()
-            finally:
+            if True:#finally:
                 if 'capture' in self.model['output'] :
                     import imageio
                     print(self.decode(self.request_frame()).mean())
