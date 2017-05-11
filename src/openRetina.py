@@ -335,13 +335,16 @@ try :
 
         def on_draw(self, event):
             gloo.clear('black')
-            if time.time()-self.start > self.retina.model['T_SIM']: sys.exit()
+            if time.time()-self.start > self.retina.model['T_SIM'] +2*2: sys.exit()
             image = self.retina.decode(self.retina.request_frame())
             self.program['texture'][...] = (image*128).astype(np.uint8)
             #self.program['texture'][...]=(data*128).astype(np.uint8)
             self.program.draw('triangle_strip')
         def on_timer(self, event):
             self.update()
-
+                    # while time.time()-start < self.model['T_SIM'] + 2*2:
+                    #     data = self.request_frame()
+                    #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
+                    #     t0 = time.time()
 except:
     print('💀  Could not load visualisation')
