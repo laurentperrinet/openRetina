@@ -30,8 +30,8 @@ class PhotoReceptor:
     def __init__(self, w, h, cam_id=0, DOWNSCALE=1, verbose=True):
         self.sleep_time = 2 # let the camera warm up for like 2 seconds
         self.w, self.h = w, h
-        print(w)
-        print(h)
+        #print(w)
+        #print(h)
         self.fps = 90
         self.led = False
 
@@ -162,12 +162,14 @@ class openRetina(object):
         if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
             start = time.time()
             if self.camera.rpi : #'picamera' in self.model['input'] :
-                #stream=self.classe.PiRGBArray(self.cam)
+                stream = self.classe.PiRGBArray(self.cap)
                 #a=self.cam.capture(stream,format='rgb',use_video_port=True)
 
-                stream = io.BytesIO()
-                for foo in self.camera.cap.capture_continuous(stream, 'bgr', use_video_port=True):
-                    self.code(foo)#, connection)
+                #stream = io.BytesIO()
+                while True:
+                    #for foo in self.camera.cap.capture_continuous(stream, 'bgr', use_video_port=True):
+                    image = self.camera.cap.capture(stream, format='rgb', use_video_port=True)
+                    self.code(image)#, connection)
                     # If we've been capturing for more than 30 seconds, quit
                     if message == b'RIP':
                         finish = time.time()
