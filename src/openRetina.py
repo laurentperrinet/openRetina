@@ -58,7 +58,7 @@ class PhotoReceptor:
             with picamera.array.PiRGBArray(self.cap) as self.stream:
                 self.cap.capture(self.stream, format='rgb')
 
-        except:
+        except ImportError:
             #On other Unix System
             self.rpi = False
 
@@ -224,6 +224,7 @@ class openRetina(object):
             start = time.time()
             try:
                 if 'display' in self.model['output'] :
+                    print('toto')
                     from openRetina import Canvas
                     from vispy import app
                     c = Canvas(self)
@@ -292,7 +293,7 @@ class openRetina(object):
 
 class other_gui(object):
     def __init__(self, retina):
-        self.retina=retina
+        self.retina = retina
 
     def displaying(self):
         while (time.time()-self.start <= self.retina.model['T_SIM']):
