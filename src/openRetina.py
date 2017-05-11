@@ -161,49 +161,20 @@ class openRetina(object):
         count = 0
         if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
             start = time.time()
-            if self.camera.rpi : #'picamera' in self.model['input'] :
-                stream = self.classe.PiRGBArray(self.cap)
-                #a=self.cam.capture(stream,format='rgb',use_video_port=True)
-
-                #stream = io.BytesIO()
-                while True:
-                    #for foo in self.camera.cap.capture_continuous(stream, 'bgr', use_video_port=True):
-                    image = self.camera.cap.capture(stream, format='rgb', use_video_port=True)
-                    self.code(image)#, connection)
-                    # If we've been capturing for more than 30 seconds, quit
-                    if message == b'RIP':
-                        finish = time.time()
-                        break
-                    # Reset the stream for the next capture
-                    stream.seek(0)
-                    stream.truncate()
-                    count += 1
-                # Write a length of zero to the stream to signal we're done
-                connection.write(struct.pack('<L', 0))
-            else: #if 'opencv' in self.model['input'] :
-                while True:
-                    # Wait for next request from client
-                    message = self.socket.recv()
-                    if self.verb: print("Received request %s" % message)
-                    if message == b'RIP':
-                        finish = time.time()
-                        break
-                    # grab a frame
-                    returned, cam_data = self.camera.cap.read()
-                    data = self.code(cam_data.reshape((self.h, self.w, 3)))
-                    #print("output resolution {0}".format(cam_data.shape))
-                    #data=cam_data
-                    ##data = self.code(cam_data)
-                    #print("dim1 : {0}, dim2 : {1}".format(self.h,self.w))
-                    #print(data.shape)
-                    #self.code(cam_data.reshape((self.h, self.w, 3)))
-                    #print(type(self.code(cam_data.reshape((self.h, self.w, 3)))))
-                    ##print(cam_data.shape)
-                    ##print("dim1 : {0}, dim2 : {1}".format(self.h,self.w))
-                    # stream it
-                    self.send_array(self.socket, data)
-                    count += 1
-
+            while True:
+                # Wait for next request from client
+                message = self.socket.recv()
+                if self.verb: print("Received request %s" % message)
+                if message == b'RIP':
+                    finish = time.time()
+                    break
+                # grab a frame
+                cam_data = self.camera.grab()
+                print("output resolution {0}".format(cam_data.shape))
+                data = self.code(cam_data.reshape((self.h, self.w, 3)))
+                print("output resolution {0}".format(cam_data.shape))
+                self.send_array(self.socket, data)
+                count += 1
         elif 'noise' in self.model['input'] :
             while True:
                 # Wait for next request from client
