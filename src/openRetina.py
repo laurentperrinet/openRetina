@@ -206,13 +206,12 @@ class openRetina(object):
             #     t0 = time.time()
             # self.socket.send (b'RIP')
             # self.socket.close()
-            if True:#try:
+            try:
                 if 'display' in self.model['output'] :
                     from openRetina import Canvas
                     from vispy import app
                     c = Canvas(self)
                     app.run()
-                    #disp=other_gui(self)
                 else:
                     print('headless mode')
                     #while time.time()-start < self.model['T_SIM'] + self.sleep_time*2:
@@ -220,13 +219,13 @@ class openRetina(object):
                         data = self.request_frame()
                         if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
                         t0 = time.time()
-            if True:#finally:
+            finally:
                 if 'capture' in self.model['output'] :
                     import imageio
                     print(self.decode(self.request_frame()).mean())
                     imageio.imwrite('capture.png', np.fliplr(255*self.decode(self.request_frame())))
                 self.socket.send (b'RIP')
-                self.socket.close()
+                #self.socket.close()
         # print('Sent %d images in %d seconds at %.2ffps' % (
         #         count, finish-start, count / (finish-start)))
         self.socket.close()
@@ -273,17 +272,6 @@ class openRetina(object):
         msg = socket.recv(flags=flags, copy=copy, track=track)
         A = np.frombuffer(msg, dtype=md['dtype'])
         return A.reshape(md['shape'])
-
-class other_gui(object):
-    def __init__(self, retina):
-        self.retina = retina
-
-    def displaying(self):
-        while (time.time()-self.start <= self.retina.model['T_SIM']):
-            image_to_display = self.retina.request_frame()
-            if image_to_diplay is not None:
-               cv2.imshow("preview", self.retina.request_frame())
-        sys.exit()
 
 try :
     from vispy import app
@@ -335,16 +323,14 @@ try :
 
         def on_draw(self, event):
             gloo.clear('black')
+            print(time.time()-self.start)
             if time.time()-self.start > self.retina.model['T_SIM'] +2*2: sys.exit()
             image = self.retina.decode(self.retina.request_frame())
             self.program['texture'][...] = (image*128).astype(np.uint8)
-            #self.program['texture'][...]=(data*128).astype(np.uint8)
             self.program.draw('triangle_strip')
+            #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
         def on_timer(self, event):
             self.update()
-                    # while time.time()-start < self.model['T_SIM'] + 2*2:
-                    #     data = self.request_frame()
-                    #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
-                    #     t0 = time.time()
+
 except:
     print('💀  Could not load visualisation')
