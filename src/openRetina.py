@@ -87,11 +87,12 @@ class PhotoReceptor:
         if self.rpi:
             # At this point the image is available as stream.array
             #frame = self.stream.array
+            # http://picamera.readthedocs.io/en/latest/recipes2.html?highlight=.array#capturing-to-a-numpy-array
             self.cap.capture(self.output, 'rgb')
         else:
             ret, frame_bgr = self.cap.read()
-            frame = frame_bgr[:, :, ::-1]     #BGR to RGB
-        return frame
+            self.output = frame_bgr[:, :, ::-1]     #BGR to RGB
+        #return frame
 
     def close(self):
         if self.rpi :
@@ -171,11 +172,11 @@ class openRetina(object):
                     finish = time.time()
                     break
                 # grab a frame
-                cam_data = self.camera.grab()
+                self.camera.grab()
                 # print("output resolution {0}".format(cam_data.shape))
                 # data = self.code(cam_data.reshape((self.h, self.w, 3)))
                 # print("output resolution {0}".format(cam_data.shape))
-                data = self.code(cam_data)
+                data = self.code(self.camera.output)
                 self.send_array(self.socket, data)
                 count += 1
         elif 'noise' in self.model['input'] :
