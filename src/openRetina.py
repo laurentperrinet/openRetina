@@ -28,16 +28,14 @@ class PhotoReceptor:
 
     """
     def __init__(self, w, h, cam_id=0, DOWNSCALE=1, verbose=True):
-        self.sleep_time = 2 # let the camera warm up for like 2 seconds
+        self.sleep_time = 1 # let the camera warm up
         self.w, self.h = w, h
-        #print(w)
-        #print(h)
         self.fps = 90
         self.led = False
 
         #----Which camera handler?----
         try:
-            #On Raspbian
+            ''' On Raspbian '''
             import picamera
             import picamera.array
 
@@ -58,26 +56,29 @@ class PhotoReceptor:
             #    self.cap.capture(self.stream, format='rgb')
 
         except ImportError:
-            #On other Unix System
+            ''' On Unix '''
             self.rpi = False
-
             try:
                 import cv2
                 self.cap = cv2.VideoCapture(cam_id)
-                if not self.cap.isOpened(): toto
+                self.cap.open(0)
+                if not self.cap.isOpened(): 
+                    print('Camera is not opened')
+                    stop
 
-                print("dim1 : {0}, dim2 : {1}".format(self.h,self.w))
+                self.DOWNSCALE = DOWNSCALE
+                print("Before a downscale of {} dim1 : {}, dim2 : {}".format(self.DOWNSCALE, self.h, self.w))
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
 
-                self.DOWNSCALE = DOWNSCALE
                 if DOWNSCALE > 1:
                     W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
                     H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W/self.DOWNSCALE)
-                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H/self.DOWNSCALE)
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(W/self.DOWNSCALE))
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(H/self.DOWNSCALE))
                 self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
                 if verbose: print('Using OpenCV')
+                if verbose: print('After a downscale of {}, dim1 : {}, dim2 : {}'.format(self.DOWNSCALE, self.h, self.w))
 
             except:
                 if verbose: print('Unable to capture video')
@@ -91,8 +92,10 @@ class PhotoReceptor:
             self.cap.capture(self.output, 'rgb')
         else:
             ret, frame_bgr = self.cap.read()
-            self.output = frame_bgr[:, :, ::-1]     #BGR to RGB
-        #return frame
+            #self.output = frame_bgr[:, :, ::-1]     #BGR to RGB
+            frame = frame_bgr
+            print('Capture grabbed')
+        return frame
 
     def close(self):
         if self.rpi :
@@ -100,6 +103,7 @@ class PhotoReceptor:
             self.camera.close()
         else :
             self.cap.release()
+            print('Capture released')
             del self.cap
 
 class openRetina(object):
@@ -172,11 +176,11 @@ class openRetina(object):
                     finish = time.time()
                     break
                 # grab a frame
-                self.camera.grab()
+                self.frame = self.camera.grab()
                 # print("output resolution {0}".format(cam_data.shape))
                 # data = self.code(cam_data.reshape((self.h, self.w, 3)))
                 # print("output resolution {0}".format(cam_data.shape))
-                data = self.code(self.camera.output)
+                data = self.code(self.frame)
                 self.send_array(self.socket, data)
                 count += 1
         elif 'noise' in self.model['input'] :
@@ -222,7 +226,7 @@ class openRetina(object):
             finally:
                 if 'capture' in self.model['output'] :
                     import imageio
-                    print(self.decode(self.request_frame()).mean())
+                    print("Frame mean: ",self.decode(self.request_frame()).mean())
                     imageio.imwrite('capture.png', np.fliplr(255*self.decode(self.request_frame())))
                 self.socket.send (b'RIP')
                 #self.socket.close()
@@ -253,7 +257,7 @@ class openRetina(object):
     def decode(self, data):
         image = data.copy()
         # normalize
-        print("Image  ", image.shape, image.min(), image.max())
+        print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
         return image
 
     # https://zeromq.github.io/pyzmq/serialization.html
@@ -323,7 +327,7 @@ try :
 
         def on_draw(self, event):
             gloo.clear('black')
-            print(time.time()-self.start)
+            print("Duration: ",time.time()-self.start)
             if time.time()-self.start > self.retina.model['T_SIM'] +2*2: sys.exit()
             image = self.retina.decode(self.retina.request_frame())
             self.program['texture'][...] = (image*128).astype(np.uint8)
