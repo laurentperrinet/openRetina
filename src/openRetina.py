@@ -114,16 +114,15 @@ class openRetina(object):
         """
         Initializes the openRetina class
 
-        """        #self.w, self.h = 1920,1080
+        """
+        #self.w, self.h = 1920,1080
         #self.w, self.h = 640, 480
-        #self.w, self.h = 320, 240
-        #self.w, self.h = 1280, 720
+        self.w, self.h = 320, 240
         #self.w, self.h = 160, 128
         #self.w, self.h = 1280, 720
-        self.w, self.h = 1280, 720 # full resolution for macbook pro
+        #self.w, self.h = 1280, 720 # full resolution for macbook pro
+        #self.w, self.h = 128, 72
         #self.w, self.h = 160, 128
-        # adjust resolution on the rpi
-        self.raw_resolution()
         '''
             model is a dict describing the model used
             layer : thalamus,
@@ -134,10 +133,19 @@ class openRetina(object):
             port : 5566 by default
         '''
         self.model = model
-        self.n_cores = 4
+
+        if not 'n_cores' in self.model.keys(): self.model['n_cores']=1
 
         if not 'ip' in self.model.keys(): self.model['ip']='localhost'
         if not 'port' in self.model.keys(): self.model['port']='5566'
+
+        if 'camera' in self.model['input'] :
+            self.camera = PhotoReceptor(self.w, self.h)
+            if self.camera.rpi:
+                # adjust resolution on the rpi
+                self.raw_resolution()
+
+
         self.verb = verb
 
         # simulation time
@@ -242,25 +250,23 @@ class openRetina(object):
         self.socket.send (b"REQ")
         return self.recv_array(self.socket)
 
-    def code(self, image):#stream, connection):
-        #data = image.copy()
-        # normalize
-#         data -= data.min()
-#         data /= data.max()
-        data = np.zeros_like(image)
+    def code(self, image):
         image = image.astype(np.float)
-        image = image.sum(axis=-1)
-        image /= image.std()
-        dimage = image - self.image_old
-        data[:, :, 0] = dimage > dimage.mean() + dimage.std()
-        data[:, :, -1] = dimage < dimage.mean() - dimage.std()
-        self.image_old = image
-        return data
+        #image = image.sum(axis=-1)
+        image -= image.min()
+        image /= (image.max()-image.min())
+        # data = np.zeros_like(image)
+        # image /= image.std()
+        # dimage = image - self.image_old
+        # data[:, :, 0] = dimage > dimage.mean() + dimage.std()
+        # data[:, :, -1] = dimage < dimage.mean() - dimage.std()
+        # self.image_old = image
+        return image
 
     def decode(self, data):
         image = data.copy()
         # normalize
-        print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
+        #print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
         return image
 
     # https://zeromq.github.io/pyzmq/serialization.html

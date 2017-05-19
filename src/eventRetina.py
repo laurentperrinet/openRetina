@@ -14,7 +14,7 @@ import numpy as np
 from openRetina import openRetina
 
 class eventRetina(openRetina):
-    def __init__(self, model, verb=True, sparseness=.0001):
+    def __init__(self, model, verb=True, sparseness=.001):
         """
         Initializes the eventRetina class which is basically the same as the
         openRetina class but which only transmit a list of events
@@ -42,5 +42,5 @@ class eventRetina(openRetina):
         image[:, :, 0][np.unravel_index(data[:self.n_datapoints], (self.h, self.w))] = 1
         image[:, :, -1][np.unravel_index(data[-self.n_datapoints:], (self.h, self.w))] = 1
         # normalize
-        print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
+        #print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
         return image
