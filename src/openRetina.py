@@ -62,7 +62,7 @@ class PhotoReceptor:
                 import cv2
                 self.cap = cv2.VideoCapture(cam_id)
                 self.cap.open(0)
-                if not self.cap.isOpened(): 
+                if not self.cap.isOpened():
                     print('Camera is not opened')
                     stop
 
@@ -109,9 +109,12 @@ class PhotoReceptor:
 class openRetina(object):
     def __init__(self,
                  model,
-                 verb = True,
+                 verb=True,
             ):
-        #self.w, self.h = 1920,1080
+        """
+        Initializes the openRetina class
+
+        """        #self.w, self.h = 1920,1080
         #self.w, self.h = 640, 480
         #self.w, self.h = 320, 240
         #self.w, self.h = 1280, 720
