@@ -24,9 +24,8 @@ class eventRetina(openRetina):
         if not 'layer' in self.model.keys(): self.model['layer'] = 'eventRetina'
         self.n_datapoints = int(np.ceil(sparseness*self.h*self.w))
         print('Number of points sent at each frame=', self.n_datapoints)
-        size = self.request_frame().shape
-        print(size)
-        self.h, self.w = size[0], size[1]
+
+        print("size of eventRetina " , self.h, self.w)
         self.image_old = np.zeros((self.h, self.w))
 
     def code(self, image):

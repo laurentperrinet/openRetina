@@ -27,7 +27,7 @@ class PhotoReceptor:
     Base class for the input to the openRetina
 
     """
-    def __init__(self, w, h, cam_id=0, DOWNSCALE=4, verbose=True):
+    def __init__(self, w, h, cam_id=0, DOWNSCALE=4, verbose=False):
         #self.w, self.h = 1920,1080
         #self.w, self.h = 640, 480
         #self.w, self.h = 320, 240
@@ -41,6 +41,7 @@ class PhotoReceptor:
         self.w, self.h = w, h
         self.fps = 90
         self.led = False
+        self.verbose = verbose
 
         #----Which camera handler?----
         try:
@@ -85,13 +86,21 @@ class PhotoReceptor:
                 if DOWNSCALE > 1:
                     W = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
                     H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(W/self.DOWNSCALE))
-                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(H/self.DOWNSCALE))
-                self.h, self.w = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W//self.DOWNSCALE)
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H//self.DOWNSCALE)
+
+                for hack in range(2):
+                    frame = self.grab()
+                    print('Capture grabbed', frame.shape)
+                    self.h, self.w, three = frame.shape
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
+
+                #self.h, self.w = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                 if verbose: print('Using OpenCV')
                 if verbose: print('After a downscale of {}, dim1 : {}, dim2 : {}'.format(self.DOWNSCALE, self.h, self.w))
 
-            except:
+            except ImportError:
                 if verbose: print('Unable to capture video')
     #-------------------------------#
 
@@ -114,7 +123,7 @@ class PhotoReceptor:
             ret, frame_bgr = self.cap.read()
             #self.output = frame_bgr[:, :, ::-1]     #BGR to RGB
             frame = frame_bgr
-            print('Capture grabbed')
+        if self.verbose: print('Capture grabbed', frame.shape)
         return frame
 
     def close(self):
@@ -186,6 +195,11 @@ class openRetina(object):
             if self.verb: print(self.model['layer'], "is asking for the size")
             self.in_socket.send (b'SIZ')
 
+        if 'stream' in self.model['input'] :
+            size =  self.recv_array(self.in_socket)
+            self.w, self.h = size[0], size[1]
+            if self.verb: print(self.model['layer'], "received the size: (w, h)=", self.w, self.h)
+
         if 'stream' in self.model['output'] :
             message = b'NIL'
             while not (message == b'SIZ'):
@@ -193,11 +207,6 @@ class openRetina(object):
                 message = self.out_socket.recv()
                 if self.verb: print(self.model['layer'], "Camera client received request %s" % message)
             self.send_array(self.out_socket, np.array([self.w, self.h]))
-
-        if 'stream' in self.model['input'] :
-            size =  self.recv_array(self.in_socket)
-            self.w, self.h = size[0], size[1]
-
 
     def run(self):
         count = 0
@@ -343,7 +352,7 @@ try :
         def __init__(self, retina):
             app.use_app('pyglet')
             self.retina = retina
-            app.Canvas.__init__(self, title=retina.model['layer'],
+            app.Canvas.__init__(self, title=retina.model['title'],
                                 keys='interactive', fullscreen=True, size=(1280, 960))#
             self.program = gloo.Program(vertex, fragment, count=4)
             self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
