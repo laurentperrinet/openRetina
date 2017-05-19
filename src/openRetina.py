@@ -184,17 +184,17 @@ class openRetina(object):
             while True:
                 # checking that in this mode we send data by streaming it out
                 assert('stream' in self.model['output'])
-                # Wait for next request from client
-                message = self.out_socket.recv()
-                if self.verb: print(self.model['layer'], "Camera client received request %s" % message)
-                if message == b'RIP':
-                    break
                 # grab a frame
                 self.frame = self.camera.grab()
                 # print("output resolution {0}".format(cam_data.shape))
                 # data = self.code(cam_data.reshape((self.h, self.w, 3)))
                 # print("output resolution {0}".format(cam_data.shape))
                 data = self.code(self.frame)
+                # Wait for next request from client
+                message = self.out_socket.recv()
+                if self.verb: print(self.model['layer'], "Camera client received request %s" % message)
+                if message == b'RIP':
+                    break
                 self.send_array(self.out_socket, data)
                 count += 1
         elif 'noise' in self.model['input'] :
@@ -226,14 +226,14 @@ class openRetina(object):
                     app.run()
                 elif 'stream' in self.model['output'] :
                     while True: #time.time()-start < self.model['T_SIM'] + 2*2:
+                        self.frame = self.request_frame()
+                        data = self.code(self.frame)
                         # send a message to output port
                         message = self.out_socket.recv()
                         if self.verb: print(self.model['layer'], "Stream input received request %s" % message)
                         if message == b'RIP':
                             break
                         else:
-                            self.frame = self.request_frame()
-                            data = self.code(self.frame)
                             # when ready send data
                             self.send_array(self.out_socket, data)
                             count += 1
