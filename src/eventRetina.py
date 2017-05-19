@@ -21,10 +21,14 @@ class eventRetina(openRetina):
 
         """
         openRetina.__init__(self, model, verb=verb)
+        if not 'layer' in self.model.keys(): self.model['layer'] = 'eventRetina'
         self.n_datapoints = int(np.ceil(sparseness*self.h*self.w))
         print('Number of points sent at each frame=', self.n_datapoints)
 
+        self.image_old = np.zeros((self.h, self.w))
+
     def code(self, image):
+        
         image = image.astype(np.float)
         image = image.sum(axis=-1)
         image /= image.std()
