@@ -27,7 +27,7 @@ class PhotoReceptor:
     Base class for the input to the openRetina
 
     """
-    def __init__(self, w, h, cam_id=0, DOWNSCALE=1, verbose=True):
+    def __init__(self, w, h, cam_id=0, DOWNSCALE=4, verbose=True):
         #self.w, self.h = 1920,1080
         #self.w, self.h = 640, 480
         #self.w, self.h = 320, 240
@@ -72,7 +72,7 @@ class PhotoReceptor:
             try:
                 import cv2
                 self.cap = cv2.VideoCapture(cam_id)
-                self.cap.open(0)
+                #self.cap.open(0)
                 if not self.cap.isOpened():
                     print('Camera is not opened')
                     stop
@@ -87,7 +87,7 @@ class PhotoReceptor:
                     H = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
                     self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(W/self.DOWNSCALE))
                     self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(H/self.DOWNSCALE))
-                self.h, self.w = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT), self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                self.h, self.w = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                 if verbose: print('Using OpenCV')
                 if verbose: print('After a downscale of {}, dim1 : {}, dim2 : {}'.format(self.DOWNSCALE, self.h, self.w))
 
@@ -153,12 +153,11 @@ class openRetina(object):
         if not 'in_port' in self.model.keys(): self.model['in_port'] = '5566'
         if not 'out_port' in self.model.keys(): self.model['out_port'] = '5566'
 
-        if not 'desired_size' in self.model.keys(): self.model['desired_size'] = (1280, 720)
-
-        self.w, self.h = self.model['desired_size']
-
         if 'camera' in self.model['input'] :
+            if not 'desired_size' in self.model.keys(): self.model['desired_size'] = (1280, 720)
+            self.w, self.h = self.model['desired_size']
             self.camera = PhotoReceptor(self.w, self.h)
+            self.w, self.h = self.camera.w, self.camera.h
 
         self.verb = verb
 
@@ -170,11 +169,34 @@ class openRetina(object):
         self.do_fs = True
         self.do_fs = False
 
+
+        if 'stream' in self.model['input'] :
+            in_context = zmq.Context()
+            if self.verb: print(self.model['layer'], "Connecting to retina with port %s" % self.model['in_port'])
+            self.in_socket = in_context.socket(zmq.REQ)
+            self.in_socket.connect ("tcp://%s:%s" % (self.model['ip'], self.model['in_port']))
+
         if 'stream' in self.model['output'] :
             out_context = zmq.Context()
             self.out_socket = out_context.socket(zmq.REP)
             self.out_socket.bind("tcp://*:%s" % self.model['out_port'])
-            if self.verb: print("Running out_socket on port: ", self.model['out_port'])
+            if self.verb: print(self.model['layer'], "Running out_socket on port: ", self.model['out_port'])
+
+        if 'stream' in self.model['input'] :
+            if self.verb: print(self.model['layer'], "is asking for the size")
+            self.in_socket.send (b'SIZ')
+
+        if 'stream' in self.model['output'] :
+            message = b'NIL'
+            while not (message == b'SIZ'):
+                # Wait for next request from client
+                message = self.out_socket.recv()
+                if self.verb: print(self.model['layer'], "Camera client received request %s" % message)
+            self.send_array(self.out_socket, np.array([self.w, self.h]))
+
+        if 'stream' in self.model['input'] :
+            size =  self.recv_array(self.in_socket)
+            self.w, self.h = size[0], size[1]
 
 
     def run(self):
@@ -211,11 +233,6 @@ class openRetina(object):
                 count += 1
 
         elif 'stream' in self.model['input'] :
-            in_context = zmq.Context()
-            if self.verb: print(self.model['layer'], "Connecting to retina with port %s" % self.model['in_port'])
-            self.in_socket = in_context.socket(zmq.REQ)
-            self.in_socket.connect ("tcp://%s:%s" % (self.model['ip'], self.model['in_port']))
-
             t0 = time.time()
             start = time.time()
             try:
@@ -260,7 +277,7 @@ class openRetina(object):
         sys.exit()
 
     def request_frame(self):
-        if self.verb: print(self.model['layer'], "is sending request")
+        if self.verb: print(self.model['layer'], "is asking for a request")
         self.in_socket.send (b'REQ')
         return self.recv_array(self.in_socket)
 
@@ -351,7 +368,7 @@ try :
                 sys.exit()
             else:
                 image = self.retina.decode(self.retina.request_frame())
-                self.program['texture'][...] = (image*128).astype(np.uint8)
+                self.program['texture'][...] = (image*255).astype(np.uint8)
                 self.program.draw('triangle_strip')
                 #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
         def on_timer(self, event):
