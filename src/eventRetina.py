@@ -28,11 +28,12 @@ class eventRetina(openRetina):
         print("size of eventRetina " , self.h, self.w)
         self.image_old = np.zeros((self.h, self.w))
 
-    def code(self, image):
+        self.dtype = None
 
+    def code(self, image):
         image = image.astype(np.float)
         image = image.sum(axis=-1)
-        image /= image.std()
+        #image /= image.std()
         dimage = image - self.image_old
         self.image_old = image
 
@@ -43,9 +44,9 @@ class eventRetina(openRetina):
         return data
 
     def decode(self, data):
-        image = np.zeros((self.h, self.w, 3), dtype=np.int)
-        image[:, :, 0][np.unravel_index(data[:self.n_datapoints], (self.h, self.w))] = 1
-        image[:, :, -1][np.unravel_index(data[-self.n_datapoints:], (self.h, self.w))] = 1
+        image = np.zeros((self.h, self.w, 3) , dtype=np.uint8)
+        image[:, :, 0][np.unravel_index(data[:self.n_datapoints], (self.h, self.w))] = 255 #True
+        image[:, :, -1][np.unravel_index(data[-self.n_datapoints:], (self.h, self.w))] = 255 #True
         # normalize
         #print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
         return image

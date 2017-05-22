@@ -162,11 +162,18 @@ class openRetina(object):
         if not 'in_port' in self.model.keys(): self.model['in_port'] = '5566'
         if not 'out_port' in self.model.keys(): self.model['out_port'] = '5566'
 
+        self.dtype = None
         if 'camera' in self.model['input'] :
             if not 'desired_size' in self.model.keys(): self.model['desired_size'] = (1280, 720)
             self.w, self.h = self.model['desired_size']
             self.camera = PhotoReceptor(self.w, self.h)
             self.w, self.h = self.camera.w, self.camera.h
+            self.dtype = None # np.uint8
+
+        if 'noise' in self.model['input'] :
+            if not 'desired_size' in self.model.keys(): self.model['desired_size'] = (1280//4, 720//4)
+            self.w, self.h = self.model['desired_size']
+            self.dtype = None # np.uint8
 
         self.verb = verb
 
@@ -194,8 +201,6 @@ class openRetina(object):
         if 'stream' in self.model['input'] :
             if self.verb: print(self.model['layer'], "is asking for the size")
             self.in_socket.send (b'SIZ')
-
-        if 'stream' in self.model['input'] :
             size =  self.recv_array(self.in_socket)
             self.w, self.h = size[0], size[1]
             if self.verb: print(self.model['layer'], "received the size: (w, h)=", self.w, self.h)
@@ -222,11 +227,16 @@ class openRetina(object):
                 # print("output resolution {0}".format(cam_data.shape))
                 data = self.code(self.frame)
                 # Wait for next request from client
+                start_dt = time.time()
                 message = self.out_socket.recv()
-                if self.verb: print(self.model['layer'], "Camera client received request %s" % message)
+                stop_dt = time.time()
+                if self.verb: print(self.model['layer'], "Camera client received request ", message, "waiting ", (stop_dt-start_dt)*1000, "ms")
                 if message == b'RIP':
                     break
-                self.send_array(self.out_socket, data)
+                start_dt = time.time()
+                self.send_array(self.out_socket, data, dtype=self.dtype)
+                stop_dt = time.time()
+                if self.verb: print(self.model['layer'], "Camera sent data in ", (stop_dt-start_dt)*1000, "ms")
                 count += 1
         elif 'noise' in self.model['input'] :
             while True:
@@ -238,7 +248,7 @@ class openRetina(object):
                 self.frame = np.random.randint(0, high=255, size=(self.w, self.h, 3))
                 data = self.code(self.frame)
                 # Reset the stream for the next capture
-                self.send_array(self.out_socket, data)
+                self.send_array(self.out_socket, data, dtype=self.dtype)
                 count += 1
 
         elif 'stream' in self.model['input'] :
@@ -261,7 +271,7 @@ class openRetina(object):
                             break
                         else:
                             # when ready send data
-                            self.send_array(self.out_socket, data)
+                            self.send_array(self.out_socket, data, dtype=self.dtype)
                             count += 1
                 else:
                     print('headless mode')
@@ -288,13 +298,13 @@ class openRetina(object):
     def request_frame(self):
         if self.verb: print(self.model['layer'], "is asking for a request")
         self.in_socket.send (b'REQ')
-        return self.recv_array(self.in_socket)
+        return self.recv_array(self.in_socket, dtype=self.dtype, shape=(self.h, self.w, 3))
 
     def code(self, image):
-        image = image.astype(np.float)
-        image -= image.min()
-        image /= (image.max()-image.min())
-        return image
+        # image = image.astype(np.float)
+        # image -= image.min()
+        # image /= (image.max()-image.min())
+        return image.astype(np.uint8)
 
     def decode(self, data):
         image = data.copy()
@@ -303,21 +313,27 @@ class openRetina(object):
         return image
 
     # https://zeromq.github.io/pyzmq/serialization.html
-    def send_array(self, socket, A, flags=0, copy=True, track=False):
-        """send a numpy array with metadata"""
-        md = dict(
-            dtype = str(A.dtype),
-            shape = A.shape,
-        )
-        socket.send_json(md, flags|zmq.SNDMORE)
+    def send_array(self, socket, A, dtype=None, flags=0, copy=True, track=False):
+        if dtype is None:
+            """send a numpy array with metadata"""
+            md = dict(
+                dtype = str(A.dtype),
+                shape = A.shape,
+            )
+            socket.send_json(md, flags|zmq.SNDMORE)
+
         return socket.send(A, flags, copy=copy, track=track)
 
-    def recv_array(self, socket, flags=0, copy=True, track=False):
+    def recv_array(self, socket, dtype=None, shape=None, flags=0, copy=True, track=False):
         """recv a numpy array"""
-        md = socket.recv_json(flags=flags)
+        if dtype is None:
+            md = socket.recv_json(flags=flags)
+            dtype = md['dtype']
+            shape = md['shape']
+
         msg = socket.recv(flags=flags, copy=copy, track=track)
-        A = np.frombuffer(msg, dtype=md['dtype'])
-        return A.reshape(md['shape'])
+        A = np.frombuffer(msg, dtype=dtype)
+        return A.reshape(shape)
 
 try :
     from vispy import app
@@ -377,7 +393,7 @@ try :
                 sys.exit()
             else:
                 image = self.retina.decode(self.retina.request_frame())
-                self.program['texture'][...] = (image*255).astype(np.uint8)
+                self.program['texture'][...] = image #(image*255).astype(np.uint8)
                 self.program.draw('triangle_strip')
                 #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
         def on_timer(self, event):
