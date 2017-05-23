@@ -34,12 +34,13 @@ The opanRetina library needs some dependencies to run:
 
 on the client, if you use a raspberry pi, you should need to only setup ``picamera`` (and its dependencies) and on a local machine, you should need ``opencv`` (to grab images from the webcam) or ``imageio`` to read local video files.
 
-Use
+On the π, use:
 
-``
+```
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/laurentperrinet/config-scripts/master/raspbian-setup.sh)"
     sudo apt-get install python3-picamera
 
-``
+```
 
 
 
