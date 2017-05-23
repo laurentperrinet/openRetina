@@ -30,8 +30,10 @@ class eventRetina(openRetina):
 
         self.dtype = None
 
-    def code(self, image):
+    def code(self, image, rgb2gray=[0.2989, 0.5870, 0.1140]):
         image = image.astype(np.float)
+        image *= np.array(rgb2gray)[np.newaxis, np.newaxis, :]
+
         image = image.sum(axis=-1)
         #image /= image.std()
         dimage = image - self.image_old
