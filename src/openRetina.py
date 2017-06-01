@@ -118,7 +118,7 @@ class PhotoReceptor:
             # At this point the image is available as stream.array
             #frame = self.stream.array
             # http://picamera.readthedocs.io/en/latest/recipes2.html?highlight=.array#capturing-to-a-numpy-array
-            self.cap.capture(self.output, 'rgb')
+            frame = self.cap.capture(self.output, 'rgb')
         else:
             ret, frame_bgr = self.cap.read()
             #self.output = frame_bgr[:, :, ::-1]     #BGR to RGB
