@@ -14,6 +14,7 @@ import numpy as np
 from openRetina import openRetina
 
 class eventRetina(openRetina):
+
     def __init__(self, model, verb=True, sparseness=.001):
         """
         Initializes the eventRetina class which is basically the same as the

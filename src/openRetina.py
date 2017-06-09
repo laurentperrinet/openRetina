@@ -79,7 +79,7 @@ class PhotoReceptor:
                     stop
 
                 self.DOWNSCALE = DOWNSCALE
-                print("Before a downscale of {} dim1 : {}, dim2 : {}".format(self.DOWNSCALE, self.h, self.w))
+                if verbose: print("Before a downscale of {} dim1 : {}, dim2 : {}".format(self.DOWNSCALE, self.h, self.w))
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
 
@@ -91,7 +91,7 @@ class PhotoReceptor:
 
                 for hack in range(2):
                     frame = self.grab()
-                    print('Capture grabbed', frame.shape)
+                    if verbose: print('Capture grabbed', frame.shape)
                     self.h, self.w, three = frame.shape
                     self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
                     self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
@@ -161,6 +161,7 @@ class openRetina(object):
         if not 'ip' in self.model.keys(): self.model['ip'] = 'localhost'
         if not 'in_port' in self.model.keys(): self.model['in_port'] = '5566'
         if not 'out_port' in self.model.keys(): self.model['out_port'] = '5566'
+        if not 'name_capture' in self.model.keys(): self.model['name_capture'] = 'capture.png'
 
         self.dtype = None
         if 'camera' in self.model['input'] :
@@ -215,6 +216,14 @@ class openRetina(object):
 
     def run(self):
         count = 0
+        do_capture = True
+        if do_capture and 'capture' in self.model['output'] :
+            import imageio
+            #print("Frame mean: ",self.decode(self.request_frame()).mean())
+            previous_frame = self.request_frame()
+            imageio.imwrite(self.model['name_capture'] , np.fliplr(self.decode(self.request_frame())))
+            do_capture = False
+
         if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
             start = time.time()
             while True:
@@ -255,6 +264,7 @@ class openRetina(object):
             t0 = time.time()
             start = time.time()
             try:
+
                 if 'display' in self.model['output'] :
                     from openRetina import Canvas
                     from vispy import app
@@ -283,10 +293,6 @@ class openRetina(object):
             finally:
                 #self.in_socket.send (b'RIP')
                 self.in_socket.close()
-                if 'capture' in self.model['output'] :
-                    import imageio
-                    #print("Frame mean: ",self.decode(self.request_frame()).mean())
-                    imageio.imwrite('capture.png', np.fliplr(255*self.decode(self.request_frame())))
 
         finish = time.time()
         print('Sent %d images in %d seconds at %.2ffps' % (
