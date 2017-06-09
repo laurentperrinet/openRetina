@@ -216,13 +216,6 @@ class openRetina(object):
 
     def run(self):
         count = 0
-        do_capture = True
-        if do_capture and 'capture' in self.model['output'] :
-            import imageio
-            #print("Frame mean: ",self.decode(self.request_frame()).mean())
-            previous_frame = self.request_frame()
-            imageio.imwrite(self.model['name_capture'] , np.fliplr(self.decode(self.request_frame())))
-            do_capture = False
 
         if 'camera' in self.model['input'] : #or  'opencv' in self.model['input'] :
             start = time.time()
@@ -241,6 +234,7 @@ class openRetina(object):
                 stop_dt = time.time()
                 if self.verb: print(self.model['layer'], "Camera client received request ", message, "waiting ", (stop_dt-start_dt)*1000, "ms")
                 if message == b'RIP':
+                    self.capture()
                     break
                 start_dt = time.time()
                 self.send_array(self.out_socket, data, dtype=self.dtype)
@@ -253,18 +247,17 @@ class openRetina(object):
                 message = self.out_socket.recv()
                 if self.verb: print(self.model['layer'], "Noise input received request %s" % message)
                 if message == b'RIP':
+                    self.capture()
                     break
                 self.frame = np.random.randint(0, high=255, size=(self.w, self.h, 3))
                 data = self.code(self.frame)
                 # Reset the stream for the next capture
                 self.send_array(self.out_socket, data, dtype=self.dtype)
                 count += 1
-
         elif 'stream' in self.model['input'] :
             t0 = time.time()
             start = time.time()
-            try:
-
+            if True:#try:
                 if 'display' in self.model['output'] :
                     from openRetina import Canvas
                     from vispy import app
@@ -278,6 +271,8 @@ class openRetina(object):
                         message = self.out_socket.recv()
                         if self.verb: print(self.model['layer'], "Stream input received request %s" % message)
                         if message == b'RIP':
+                            self.capture()
+                            self.in_socket.send (b'RIP')
                             break
                         else:
                             # when ready send data
@@ -290,16 +285,27 @@ class openRetina(object):
                         data = self.request_frame()
                         if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
                         t0 = time.time()
-            finally:
-                #self.in_socket.send (b'RIP')
-                self.in_socket.close()
+            # finally:
+            #     self.in_socket.close()
+
 
         finish = time.time()
-        print('Sent %d images in %d seconds at %.2ffps' % (
+        print(self.model['layer'],  'Sent %d images in %d seconds at %.2ffps' % (
                  count, finish-start, count / (finish-start)))
+
+        if 'stream' in self.model['input'] :
+            self.in_socket.close()
         if 'stream' in self.model['output'] :
             self.out_socket.close()
         sys.exit()
+
+    def capture(self):
+        print(self.model['layer'],  self.model['output'],  'capture' in self.model['output'])
+        if 'capture' in self.model['output']:
+            import imageio
+            test_frame = self.decode(self.frame)
+            if self.verb: print(self.model['layer'],  " capturing a frame ; min-mean-max: ", test_frame.min(), test_frame.mean(), test_frame.max() )
+            imageio.imwrite(self.model['name_capture'], np.fliplr(self.frame))
 
     def request_frame(self):
         if self.verb: print(self.model['layer'], "is asking for a request")
@@ -395,10 +401,12 @@ try :
             gloo.clear('black')
             if self.verb: print("Total Duration: ", time.time()-self.start)
             if time.time()-self.start > self.retina.model['T_SIM'] + 2*2:
+                self.retina.capture()
                 self.retina.in_socket.send (b'RIP')
                 sys.exit()
             else:
-                image = self.retina.decode(self.retina.request_frame())
+                self.retina.frame = self.retina.request_frame()
+                image = self.retina.decode(self.retina.frame)
                 self.program['texture'][...] = image #(image*255).astype(np.uint8)
                 self.program.draw('triangle_strip')
                 #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
