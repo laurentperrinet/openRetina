@@ -67,7 +67,7 @@ class PhotoReceptor:
             #with picamera.array.PiRGBArray(self.cap) as self.stream:
             #    self.cap.capture(self.stream, format='rgb')
 
-        except ImportError:
+        except:
             ''' On Unix '''
             self.rpi = False
             try:
@@ -316,6 +316,7 @@ class openRetina(object):
         # image = image.astype(np.float)
         # image -= image.min()
         # image /= (image.max()-image.min())
+        print(image)
         return image.astype(np.uint8)
 
     def decode(self, data):
