@@ -316,8 +316,10 @@ class openRetina(object):
         # image = image.astype(np.float)
         # image -= image.min()
         # image /= (image.max()-image.min())
-        print(image)
-        return image.astype(np.uint8)
+        try:
+            return image.astype(np.uint8)
+        except:
+            return None
 
     def decode(self, data):
         image = data.copy()
