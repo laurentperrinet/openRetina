@@ -234,7 +234,7 @@ class openRetina(object):
                 stop_dt = time.time()
                 if self.verb: print(self.model['layer'], "Camera client received request ", message, "waiting ", (stop_dt-start_dt)*1000, "ms")
                 if message == b'RIP':
-                    self.capture()
+                    #self.capture()
                     break
                 start_dt = time.time()
                 self.send_array(self.out_socket, data, dtype=self.dtype)
