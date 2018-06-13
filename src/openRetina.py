@@ -27,7 +27,7 @@ class PhotoReceptor:
     Base class for the input to the openRetina
 
     """
-    def __init__(self, w, h, cam_id=0, DOWNSCALE=4, verbose=False):
+    def __init__(self, w, h, cam_id=0, DOWNSCALE=1, verbose=False):
         #self.w, self.h = 1920,1080
         #self.w, self.h = 640, 480
         #self.w, self.h = 320, 240
@@ -383,12 +383,12 @@ try :
         def __init__(self, retina):
             app.use_app('pyglet')
             self.retina = retina
-            app.Canvas.__init__(self, title=retina.model['title'],
+            app.Canvas.__init__(self, #title=retina.model['title'],
                                 keys='interactive', fullscreen=True, size=(1280, 960))#
             self.program = gloo.Program(vertex, fragment, count=4)
             self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
             self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
-            self.program['texture'] = np.zeros((self.retina.h, self.retina.w, 3)).astype(np.uint8)
+            self.program['texture'] = np.zeros((int(self.retina.h), int(self.retina.w), 3)).astype(np.uint8)
             width, height = self.physical_size
             gloo.set_viewport(0, 0, width, height)
             self._timer = app.Timer('auto', connect=self.on_timer, start=True)
