@@ -40,7 +40,7 @@ class eventRetina(openRetina):
         dimage = image - self.image_old
         self.image_old = image
 
-        # see http://blog.invibe.net/posts/2016-11-17-finding-extremal-values-in-a-nd-array.html
+        # see https://laurentperrinet.github.io/sciblog/posts/2016-11-17-finding-extremal-values-in-a-nd-array.html
         data_ = np.argsort(dimage.ravel())
         # data = np.zeros(self.n_datapoints*2)
         data = np.hstack((data_[:self.n_datapoints], data_[-self.n_datapoints:]))
