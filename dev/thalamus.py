@@ -9,10 +9,11 @@ __author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 # import subprocess
 # p = subprocess.Popen(['python3 photoreceptors.py'])
 
-from openRetina import openRetina
-thalamus = openRetina(model=dict(layer='thalamus', # label for this layer
+from eventRetina import eventRetina
+thalamus = eventRetina(model=dict(layer='thalamus', # label for this layer
                              input=['stream'], # input: can be the camera, noise, a movie (TODO)
-                             output=['display','capture'],
+                             output=['display'],
+                             # output=['display','capture'],
                              #output=['capture'], # output: can be stream, display, capture,...
                              T_SIM=20))
 thalamus.run()

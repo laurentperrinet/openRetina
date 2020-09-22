@@ -21,7 +21,6 @@ import sys
 #from multiprocessing.pool import ThreadPool
 #from collections import deque
 
-
 class PhotoReceptor:
     """
 

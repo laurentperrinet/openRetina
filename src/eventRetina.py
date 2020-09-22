@@ -16,6 +16,8 @@ from openRetina import openRetina
 class eventRetina(openRetina):
     """
     The eventRetina class implements a simple DVS.
+
+    Codes and decodes...
     """
 
     def __init__(self, model, verb=True, sparseness=.001):
@@ -42,18 +44,19 @@ class eventRetina(openRetina):
 
         Takes an image as input, returns a list of sorted pixels.
         """
-        image = image.astype(np.float)
-        image *= np.array(rgb2gray)[np.newaxis, np.newaxis, :]
-
-        image = image.sum(axis=-1)
+        image_ = image.copy()
+        image_ = image_.astype(np.float)
+        image_ *= np.array(rgb2gray)[np.newaxis, np.newaxis, :]
+        image_ = image_.sum(axis=-1)
         #image /= image.std()
-        dimage = image - self.image_old
-        self.image_old = image
+        dimage = image_ - self.image_old
+        self.image_old = image_.copy()
 
         # see https://laurentperrinet.github.io/sciblog/posts/2016-11-17-finding-extremal-values-in-a-nd-array.html
         data_ = np.argsort(dimage.ravel())
         # data = np.zeros(self.n_datapoints*2)
         data = np.hstack((data_[:self.n_datapoints], data_[-self.n_datapoints:]))
+        print('DEBUG code', data.shape, data[:self.n_datapoints])
         return data
 
     def decode(self, data):
@@ -62,9 +65,10 @@ class eventRetina(openRetina):
 
         Takes a list of sorted pixels as input, returns an image.
         """
-        image = np.zeros((self.h, self.w, 3) , dtype=np.uint8)
+        image = np.zeros((self.h, self.w, 3), dtype=np.uint8)
+        print('DEBUG decode', data.shape, data[:self.n_datapoints])
         image[:, :, 0][np.unravel_index(data[:self.n_datapoints], (self.h, self.w))] = 255 #True
         image[:, :, -1][np.unravel_index(data[-self.n_datapoints:], (self.h, self.w))] = 255 #True
         # normalize
-        #print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
+        print("Image shape: ", image.shape, "Image min: ",image.min(), "Image max:",image.max())
         return image
