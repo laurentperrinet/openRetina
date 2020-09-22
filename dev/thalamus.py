@@ -1,15 +1,13 @@
-# -*- coding: utf8 -*-
-from __future__ import division, print_function
 """
-openRetina : a basic thalamic layer
+openRetina : a basic thalamic layer.
 
 See https://github.com/laurentperrinet/openRetina
 
 """
 __author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 
-import subprocess
-p = subprocess.Popen(['./photoreceptors.py'])
+# import subprocess
+# p = subprocess.Popen(['python3 photoreceptors.py'])
 
 from openRetina import openRetina
 thalamus = openRetina(model=dict(layer='thalamus', # label for this layer

@@ -1,8 +1,5 @@
-#! /usr/bin/env python3
-# -*- coding: utf8 -*-
-from __future__ import division, print_function
 """
-openRetina : a photoreceptor layer
+openRetina : a photoreceptor layer.
 
 See https://github.com/laurentperrinet/openRetina
 

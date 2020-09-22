@@ -69,7 +69,7 @@ class PhotoReceptor:
             #    self.cap.capture(self.stream, format='rgb')
 
         except:
-            ''' On Unix '''
+            ''' On Unix, Linux or MacOS '''
             self.rpi = False
             try:
                 import cv2
@@ -108,9 +108,10 @@ class PhotoReceptor:
 
     def raw_resolution(self):
         """
-        Round a (width, height) tuple up to the nearest multiple of 32 horizontally
-        and 16 vertically (as this is what the Pi's camera module does for
-        unencoded output).
+        Round a (width, height) tuple up to the nearest multiple.
+
+        Detail: of 32 horizontally and 16 vertically (as this is what the Pi's
+        camera module does for unencoded output).
         """
         self.w = (self.w + 31) // 32 * 32
         self.h = (self.h + 15) // 16 * 16
@@ -319,7 +320,7 @@ class openRetina(object):
         # image -= image.min()
         # image /= (image.max()-image.min())
         try:
-            return image.astype(np.uint8)
+            return image.astype(int)
         except:
             return None
 
@@ -383,14 +384,17 @@ try :
 
     class Canvas(app.Canvas):
         def __init__(self, retina):
-            app.use_app('pyglet')
+            # app.use_app('pyglet')
             self.retina = retina
             app.Canvas.__init__(self, #title=retina.model['title'],
                                 keys='interactive', fullscreen=True, size=(1280, 960))#
             self.program = gloo.Program(vertex, fragment, count=4)
             self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
             self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
-            self.program['texture'] = np.zeros((int(self.retina.h), int(self.retina.w), 3)).astype(np.uint8)
+
+            print('DEBUG', self.retina.h, self.retina.w)
+            tex = np.zeros((int(self.retina.h), int(self.retina.w), 3), dtype=np.uint8)
+            self.program['texture'] = tex #.astype(np.uint8)
             width, height = self.physical_size
             gloo.set_viewport(0, 0, width, height)
             self._timer = app.Timer('auto', connect=self.on_timer, start=True)
@@ -404,7 +408,7 @@ try :
 
         def on_draw(self, event):
             gloo.clear('black')
-            if self.verb: print("Total Duration: ", time.time()-self.start)
+            # if self.verb: print("Total Duration: ", time.time()-self.start)
             if time.time()-self.start > self.retina.model['T_SIM'] + 2*2:
                 self.retina.capture()
                 self.retina.in_socket.send (b'RIP')
@@ -412,11 +416,11 @@ try :
             else:
                 self.retina.frame = self.retina.request_frame()
                 image = self.retina.decode(self.retina.frame)
-                self.program['texture'][...] = image #(image*255).astype(np.uint8)
+                self.program['texture'][...] = image.astype(np.uint8) #(image*255).astype(np.uint8)
                 self.program.draw('triangle_strip')
                 #     if self.verb: print('Image is ', data.shape, 'FPS=', 1./(time.time()-t0))
         def on_timer(self, event):
             self.update()
 
 except:
-    print('💀  Could not load visualisation')
+    print('💀 Could not load visualisation')
