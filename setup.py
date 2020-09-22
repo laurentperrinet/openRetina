@@ -25,9 +25,7 @@ setup(
                    'Operating System :: POSIX',
                    'Topic :: Scientific/Engineering',
                    'Topic :: Utilities',
-                   'Programming Language :: Python :: 2',
-                   'Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 3',
-                   'Programming Language :: Python :: 3.5',
+                   'Programming Language :: Python :: 3.6',
                   ],
      )
