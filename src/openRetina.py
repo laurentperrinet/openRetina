@@ -8,8 +8,9 @@ Base class for the openRetina
 See https://github.com/laurentperrinet/openRetina
 
 """
-__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
-import io
+__author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS (2017-2018)"
+
+# import io
 #import struct
 #import array
 import numpy as np
@@ -103,6 +104,7 @@ class PhotoReceptor:
             except ImportError:
                 if verbose: print('Unable to capture video')
     #-------------------------------#
+
 
     def raw_resolution(self):
         """
