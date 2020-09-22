@@ -14,10 +14,15 @@ import numpy as np
 from openRetina import openRetina
 
 class eventRetina(openRetina):
+    """
+    The eventRetina class implements a simple DVS.
+    """
 
     def __init__(self, model, verb=True, sparseness=.001):
         """
-        Initializes the eventRetina class which is basically the same as the
+        Initialize the eventRetina class.
+
+        This is basically the same as the
         openRetina class but which only transmit a list of events
 
         """
@@ -32,6 +37,11 @@ class eventRetina(openRetina):
         self.dtype = None
 
     def code(self, image, rgb2gray=[0.2989, 0.5870, 0.1140]):
+        """
+        Code the image.
+
+        Takes an image as input, returns a list of sorted pixels.
+        """
         image = image.astype(np.float)
         image *= np.array(rgb2gray)[np.newaxis, np.newaxis, :]
 
@@ -47,6 +57,11 @@ class eventRetina(openRetina):
         return data
 
     def decode(self, data):
+        """
+        Decode data stream.
+
+        Takes a list of sorted pixels as input, returns an image.
+        """
         image = np.zeros((self.h, self.w, 3) , dtype=np.uint8)
         image[:, :, 0][np.unravel_index(data[:self.n_datapoints], (self.h, self.w))] = 255 #True
         image[:, :, -1][np.unravel_index(data[-self.n_datapoints:], (self.h, self.w))] = 255 #True
