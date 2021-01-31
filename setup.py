@@ -9,8 +9,8 @@ version = "0.1"
 setup(
     name = NAME,
     version = version,
-    packages=find_packages('src', exclude='dev'),
-    package_dir = {'': 'src'},
+    packages=find_packages('openRetina', exclude='dev'),
+    package_dir = {'': 'openRetina'},
     author = "Laurent Perrinet INT - CNRS",
     author_email = "Laurent.Perrinet@univ-amu.fr",
     description = " a neuromimetic retina model based on open hardware such as the raspberry pi. ",
@@ -26,6 +26,5 @@ setup(
                    'Topic :: Scientific/Engineering',
                    'Topic :: Utilities',
                    'Programming Language :: Python :: 3',
-                   'Programming Language :: Python :: 3.6',
                   ],
      )
