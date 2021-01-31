@@ -228,7 +228,7 @@ class openRetina(object):
                 self.frame = None
                 while self.frame is None:
                     self.frame = self.camera.grab()
-                    print("output resolution {0}".format(cam_data.shape))
+                    if self.frame is not None: print("output resolution {0}".format(self.frame.shape))
                 # data = self.code(cam_data.reshape((self.h, self.w, 3)))
                 # print("output resolution {0}".format(cam_data.shape))
                 data = self.code(self.frame)
