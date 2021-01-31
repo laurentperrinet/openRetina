@@ -10,16 +10,10 @@ See https://github.com/laurentperrinet/openRetina
 """
 __author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS (2017-2018)"
 
-# import io
-#import struct
-#import array
 import numpy as np
 import zmq
 import time
 import sys
-
-#from multiprocessing.pool import ThreadPool
-#from collections import deque
 
 class PhotoReceptor:
     """
