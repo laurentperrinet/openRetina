@@ -3,6 +3,8 @@ OpenRetina
 
 This library contains some utilities to build an event-based retina with open hardware such as a Raspberry Pi along with its camera module, your laptop's webcam or a (test) video.
 
+![demo](dev/openRetina.gif)
+
 The goal is to setup an event-based image processing scheme with the following priorities:
 
 - be entirely open-sourced, accessible (in terms of access to the soft- and hard-ware),

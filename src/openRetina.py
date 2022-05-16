@@ -386,7 +386,7 @@ try :
             # app.use_app('pyglet')
             self.retina = retina
             app.Canvas.__init__(self, #title=retina.model['title'],
-                                keys='interactive', fullscreen=True, size=(1280, 960))#
+                                keys='interactive', fullscreen=False, size=(1280, 960))#
             self.program = gloo.Program(vertex, fragment, count=4)
             self.program['position'] = [(-1, -1), (-1, +1), (+1, -1), (+1, +1)]
             self.program['texcoord'] = [(1, 1), (1, 0), (0, 1), (0, 0)]
