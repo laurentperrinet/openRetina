@@ -10,16 +10,10 @@ See https://github.com/laurentperrinet/openRetina
 """
 __author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS (2017-2018)"
 
-# import io
-#import struct
-#import array
 import numpy as np
 import zmq
 import time
 import sys
-
-#from multiprocessing.pool import ThreadPool
-#from collections import deque
 
 class PhotoReceptor:
     """
@@ -225,8 +219,13 @@ class openRetina(object):
                 # checking that in this mode we send data by streaming it out
                 assert('stream' in self.model['output'])
                 # grab a frame
-                self.frame = self.camera.grab()
-                # print("output resolution {0}".format(cam_data.shape))
+                self.frame = None
+                while self.frame is None:
+                    self.frame = self.camera.grab()
+                    if self.frame is not None:
+                        print("output resolution {0}".format(self.frame.shape))
+                    else:
+                        print('bummer!')
                 # data = self.code(cam_data.reshape((self.h, self.w, 3)))
                 # print("output resolution {0}".format(cam_data.shape))
                 data = self.code(self.frame)

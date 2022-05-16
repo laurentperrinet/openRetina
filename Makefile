@@ -2,7 +2,7 @@ default: index.html
 NAME = openRetina
 
 edit:
-	mvim -p setup.py src/__init__.py src/$(NAME).py README.md Makefile requirements.txt
+	atom setup.py src/__init__.py src/$(NAME).py README.md Makefile requirements.txt
 
 pypi_all: pypi_tags pypi_push pypi_upload pypi_docs
 # https://docs.python.org/2/distutils/packageindex.html
@@ -27,11 +27,9 @@ pypi_docs:
 	open https://pypi.python.org/pypi?action=pkg_edit&name=$NAME
 
 install_dev:
-	pip uninstall -y $(NAME) ; pip install --user -e .
 	pip3 uninstall -y $(NAME) ; pip3 install --user -e .
 
 todo:
 	grep -R * (^|#)[ ]*(TODO|FIXME|XXX|HINT|TIP)( |:)([^#]*)
 
 .PHONY: clean
-

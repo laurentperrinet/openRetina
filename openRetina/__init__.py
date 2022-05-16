@@ -10,9 +10,7 @@ See https://github.com/laurentperrinet/openRetina
 """
 __author__ = "(c) Pierre Albiges, Victor Boutin & Laurent Perrinet INT - CNRS"
 __all__ = ['openRetina', 'eventRetina']
+
 from openRetina import *
+
 from eventRetina import eventRetina
-# from .GCB import *
-# from .VisionSensor import *
-# from .Monitor import *
-# from .DoG import *
